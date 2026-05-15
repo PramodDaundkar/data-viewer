@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Data Viewer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d1117; color: #c9d1d9;
+      height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* ── Header ── */
+    #app-header {
+      flex-shrink: 0; display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px; background: #161b22; border-bottom: 1px solid #30363d;
+    }
+    #app-header h1 { font-size: 16px; font-weight: 600; color: #58a6ff; }
+    #app-header .subtitle { font-size: 12px; color: #8b949e; margin-left: 4px; }
+
+    /* ── Upload ── */
+    #upload-section { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; }
+    #drop-zone {
+      width: 100%; max-width: 560px; border: 2px dashed #30363d; border-radius: 14px;
+      padding: 48px 32px; text-align: center; cursor: pointer;
+      transition: border-color .2s, background .2s;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+    }
+    #drop-zone:hover, #drop-zone.drag-over { border-color: #58a6ff; background: rgba(88,166,255,.04); }
+    #drop-zone .dz-title { font-size: 18px; font-weight: 600; color: #e6edf3; }
+    #drop-zone .dz-sub   { font-size: 13px; color: #8b949e; }
+    .format-badges { display: flex; gap: 8px; justify-content: center; }
+    .format-badge {
+      padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+      font-family: monospace; letter-spacing: .3px;
+    }
+    .format-badge.parquet { background: rgba(88,166,255,.12); color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
+    .format-badge.csv     { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+    #drop-zone .dz-hint { font-size: 11px; color: #484f58; }
+    #file-input { display: none; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 18px; border-radius: 7px; border: 1px solid #30363d;
+      background: #21262d; color: #c9d1d9; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .btn:hover { background: #30363d; border-color: #8b949e; }
+    .btn.primary { background: #1f6feb; border-color: #388bfd; color: #fff; }
+    .btn.primary:hover { background: #388bfd; }
+    .btn.danger { border-color: #ff7b72 !important; color: #ff7b72 !important; }
+    .btn.danger:hover { background: rgba(255,123,114,.1) !important; }
+
+    /* ── Loading ── */
+    #loading-section { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #21262d; border-top-color: #58a6ff; border-radius: 50%; animation: spin .75s linear infinite; }
+    @keyframes spin  { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%,100% { opacity:.35; } 50% { opacity:.9; } }
+    #loading-msg    { font-size: 14px; color: #8b949e; }
+    #progress-wrap  { width: 280px; height: 5px; background: #21262d; border-radius: 3px; overflow: hidden; }
+    #progress-bar   { height: 100%; width: 0%; background: #58a6ff; border-radius: 3px; transition: width .25s; }
+    #loading-detail { font-size: 12px; color: #484f58; }
+
+    /* ── Error ── */
+    #error-section { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+    #error-msg { color: #ff7b72; font-size: 14px; max-width: 480px; text-align: center; line-height: 1.6; }
+
+    /* ── Viewer ── */
+    #viewer-section { flex: 1; display: none; flex-direction: column; min-height: 0; }
+
+    #stats-bar {
+      flex-shrink: 0; display: flex; align-items: center; gap: 16px;
+      padding: 6px 16px; background: #161b22; border-bottom: 1px solid #30363d;
+      font-size: 12px; color: #8b949e; flex-wrap: wrap;
+    }
+    #stats-bar .stat strong { color: #e6edf3; }
+    #stats-bar .divider { width: 1px; height: 14px; background: #30363d; flex-shrink: 0; }
+    /* File type badge — changes colour per format */
+    #filetype-badge {
+      padding: 2px 9px; border-radius: 6px; font-size: 10px; font-weight: 700;
+      font-family: monospace; flex-shrink: 0;
+    }
+    #filetype-badge.parquet { background: rgba(88,166,255,.12); color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
+    #filetype-badge.csv     { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+    #delim-badge {
+      display: none; padding: 2px 8px; background: rgba(63,185,80,.1);
+      border: 1px solid rgba(63,185,80,.3); border-radius: 10px;
+      font-size: 10px; color: #3fb950; font-weight: 600;
+    }
+    #duck-mode-badge {
+      display: none; align-items: center; gap: 5px; padding: 2px 10px;
+      background: rgba(88,166,255,.1); border: 1px solid #388bfd; border-radius: 10px;
+      font-size: 11px; color: #58a6ff; font-weight: 600;
+    }
+    #query-mode-badge {
+      display: none; align-items: center; gap: 5px; padding: 2px 10px;
+      background: rgba(31,111,235,.15); border: 1px solid #388bfd; border-radius: 10px;
+      font-size: 11px; color: #58a6ff; font-weight: 600; cursor: pointer;
+    }
+    #query-mode-badge:hover { background: rgba(31,111,235,.25); }
+    #query-mode-badge.visible { display: inline-flex; }
+
+    /* ── Toolbar ── */
+    #toolbar { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid #21262d; }
+    #search-box {
+      padding: 6px 12px; background: #0d1117; border: 1px solid #30363d;
+      border-radius: 7px; color: #c9d1d9; font-size: 13px; width: 280px;
+      outline: none; transition: border-color .15s;
+    }
+    #search-box:focus { border-color: #58a6ff; }
+    #search-info { font-size: 12px; color: #8b949e; min-width: 100px; }
+
+    /* CSV options panel */
+    #csv-options-panel {
+      display: none; position: absolute; right: 16px; top: 90px; z-index: 100;
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      padding: 14px 16px; width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    }
+    #csv-options-panel.open { display: block; }
+    #csv-options-panel h3 { font-size: 11px; color: #8b949e; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .5px; }
+    .csv-opt-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 12px; }
+    .csv-opt-row label { color: #c9d1d9; }
+    .csv-opt-row select { background: #21262d; border: 1px solid #30363d; border-radius: 5px; color: #c9d1d9; font-size: 12px; padding: 3px 7px; outline: none; width: 110px; }
+    .csv-opt-row input[type=checkbox] { cursor: pointer; accent-color: #3fb950; }
+
+    /* Column panel */
+    #col-panel {
+      display: none; position: absolute; right: 16px; top: 90px; z-index: 100;
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      padding: 12px; max-height: 320px; overflow-y: auto; width: 240px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    }
+    #col-panel.open { display: block; }
+    #col-panel h3 { font-size: 12px; color: #8b949e; margin-bottom: 8px; }
+    .col-toggle-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; cursor: pointer; color: #c9d1d9; }
+    .col-toggle-row input { cursor: pointer; accent-color: #58a6ff; }
+
+    /* Query panel */
+    #query-panel {
+      flex-shrink: 0; display: none; flex-direction: column; gap: 10px;
+      padding: 12px 16px; background: #080b10; border-bottom: 2px solid #1f6feb;
+    }
+    #query-panel.open { display: flex; }
+    .query-top-row { display: flex; gap: 10px; align-items: flex-start; }
+    #query-sql {
+      flex: 1; min-height: 72px; max-height: 200px; resize: vertical;
+      background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+      color: #c9d1d9; font-family: 'SF Mono','Fira Code','Consolas',monospace;
+      font-size: 13px; line-height: 1.65; padding: 8px 12px;
+      outline: none; transition: border-color .15s;
+    }
+    #query-sql:focus { border-color: #388bfd; }
+    #query-sql::placeholder { color: #343b45; font-style: italic; }
+    .query-btn-col { display: flex; flex-direction: column; gap: 6px; min-width: 120px; }
+    .query-hint { font-size: 11px; color: #484f58; }
+    .query-hint kbd { background: #21262d; border: 1px solid #30363d; border-radius: 3px; padding: 0 4px; font-size: 10px; color: #8b949e; }
+    #query-error { display: none; padding: 7px 12px; background: rgba(255,123,114,.07); border: 1px solid rgba(255,123,114,.3); border-radius: 5px; color: #ff7b72; font-size: 12px; font-family: monospace; word-break: break-all; }
+    #query-error.visible { display: block; }
+    #query-status { font-size: 11px; color: #3fb950; display: none; }
+    #query-status.visible { display: block; }
+    .col-chips-row { display: flex; align-items: flex-start; gap: 8px; overflow-x: auto; }
+    .col-chips-label { font-size: 11px; color: #484f58; flex-shrink: 0; padding-top: 3px; }
+    #col-chips-list { display: flex; flex-wrap: wrap; gap: 4px; }
+    .col-chip {
+      display: inline-block; padding: 2px 9px; background: #21262d;
+      border: 1px solid #30363d; border-radius: 12px; font-size: 11px;
+      color: #8b949e; cursor: pointer; font-family: monospace; white-space: nowrap; transition: all .12s;
+    }
+    .col-chip:hover { background: rgba(31,111,235,.15); border-color: #388bfd; color: #58a6ff; }
+
+    /* Autocomplete */
+    #ac-dropdown {
+      display: none; position: fixed; z-index: 99999; background: #1c2128;
+      border: 1px solid #30363d; border-radius: 7px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.6); min-width: 200px; max-width: 340px;
+      max-height: 224px; overflow-y: auto; padding: 3px 0;
+    }
+    .ac-item { display: flex; align-items: center; gap: 8px; padding: 5px 12px; cursor: pointer; font-size: 12px; font-family: 'SF Mono','Fira Code','Consolas',monospace; white-space: nowrap; }
+    .ac-item:hover, .ac-item.active { background: #2d333b; }
+    .ac-label { flex: 1; color: #c9d1d9; overflow: hidden; text-overflow: ellipsis; }
+    .ac-type { font-size: 10px; font-family: sans-serif; padding: 1px 6px; border-radius: 10px; flex-shrink: 0; font-weight: 600; }
+    .ac-type.keyword { background: #1a2f5e; color: #58a6ff; }
+    .ac-type.column  { background: #152b15; color: #3fb950; }
+    .ac-type.table   { background: #2d2000; color: #e3b341; }
+    .ac-type.func    { background: #2a1a3a; color: #bc8cff; }
+    .ac-footer { padding: 4px 12px; font-size: 10px; color: #484f58; border-top: 1px solid #21262d; display: flex; gap: 10px; }
+    .ac-footer kbd { background: #21262d; border: 1px solid #30363d; border-radius: 3px; padding: 0 4px; color: #8b949e; }
+
+    /* Table */
+    #table-wrap { flex: 1; overflow: auto; position: relative; min-height: 0; }
+    #header-group { position: sticky; top: 0; z-index: 10; }
+    #tbl-header { display: flex; background: #161b22; border-bottom: 1px solid #30363d; min-width: max-content; }
+    .th {
+      flex-shrink: 0; position: relative; padding: 7px 12px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px;
+      color: #8b949e; border-right: 1px solid #30363d;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      cursor: pointer; user-select: none; display: flex; align-items: center; gap: 4px;
+    }
+    .th:hover { background: #21262d; color: #c9d1d9; }
+    .th.sorted-asc::after  { content: ' ↑'; color: #58a6ff; }
+    .th.sorted-desc::after { content: ' ↓'; color: #58a6ff; }
+    .th-rownum { width: 64px; min-width: 64px; max-width: 64px; font-size: 10px; color: #484f58; cursor: default; }
+    .th-rownum:hover { background: transparent; }
+    .resize-handle { position: absolute; right: 0; top: 0; bottom: 0; width: 6px; cursor: col-resize; z-index: 2; background: transparent; transition: background .15s; }
+    .resize-handle:hover, .resize-handle.active { background: #58a6ff; opacity: .7; }
+    #resize-line { display: none; position: fixed; top: 0; bottom: 0; width: 2px; background: #58a6ff; opacity: .8; pointer-events: none; z-index: 9999; }
+    #filter-row { display: flex; background: #0a0d13; border-bottom: 2px solid #30363d; min-width: max-content; }
+    .filter-cell { flex-shrink: 0; padding: 3px 5px; border-right: 1px solid #21262d; display: flex; align-items: center; }
+    .filter-cell.rownum-cell { width: 64px; min-width: 64px; max-width: 64px; justify-content: center; }
+    .filter-input { width: 100%; background: transparent; border: 1px solid transparent; border-radius: 4px; color: #c9d1d9; font-size: 11px; padding: 3px 7px; outline: none; transition: border-color .15s, background .15s; }
+    .filter-input::placeholder { color: #343b45; }
+    .filter-input:hover { border-color: #30363d; }
+    .filter-input:focus { border-color: #58a6ff; background: #0d1117; }
+    .filter-input.has-value { border-color: #3fb950; background: rgba(63,185,80,.06); color: #3fb950; }
+    .filter-clear-btn { flex-shrink: 0; background: none; border: none; color: #484f58; cursor: pointer; font-size: 13px; line-height: 1; padding: 0 2px; display: none; }
+    .filter-clear-btn.visible { display: block; }
+    .filter-clear-btn:hover { color: #ff7b72; }
+    #vbody { position: relative; min-width: max-content; }
+    .row { display: flex; border-bottom: 1px solid #161b22; min-width: max-content; }
+    .row:hover { background: #1c2128 !important; }
+    .row.even { background: #0d1117; }
+    .row.odd  { background: #090d13; }
+    .td { flex-shrink: 0; padding: 5px 12px; font-size: 12px; border-right: 1px solid #161b22; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c9d1d9; line-height: 22px; }
+    .td.null-val  { color: #484f58; font-style: italic; }
+    .td.empty-val { color: #484f58; font-style: italic; }
+    .td.num-val   { color: #79c0ff; font-variant-numeric: tabular-nums; }
+    .td.bool-val  { color: #ff7b72; }
+    .td.rownum    { width: 64px; min-width: 64px; max-width: 64px; font-size: 10px; color: #484f58; text-align: right; }
+    .td mark      { background: #3d4f2a; color: #b5e853; border-radius: 2px; padding: 0 1px; }
+    body.query-mode .th { cursor: default; }
+    body.query-mode .th:hover { background: transparent; color: #8b949e; }
+  </style>
+  <style id="col-widths-style"></style>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alasql@4/dist/alasql.min.js"></script>
+</head>
+<body>
+<div id="resize-line"></div>
+<div id="ac-dropdown"></div>
+
+<!-- Header -->
+<div id="app-header">
+  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#58a6ff">
+    <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+  </svg>
+  <h1>Data Viewer</h1>
+  <span class="subtitle">— open &amp; explore Parquet and CSV files in your browser</span>
+</div>
+
+<!-- Upload -->
+<div id="upload-section">
+  <div id="drop-zone">
+    <svg width="48" height="48" fill="none" stroke="#58a6ff" stroke-width="1.5" viewBox="0 0 24 24" opacity=".85">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    <p class="dz-title">Drop any data file here</p>
+    <div class="format-badges">
+      <span class="format-badge parquet">.parquet</span>
+      <span class="format-badge parquet">.parq</span>
+      <span class="format-badge csv">.csv</span>
+      <span class="format-badge csv">.tsv</span>
+      <span class="format-badge csv">.txt</span>
+    </div>
+    <button class="btn primary" id="browse-btn">Choose File</button>
+    <p class="dz-hint">All processing is local — no data leaves your browser</p>
+    <input type="file" id="file-input" accept=".parquet,.parq,.csv,.tsv,.txt">
+  </div>
+</div>
+
+<!-- Loading -->
+<div id="loading-section">
+  <div class="spinner"></div>
+  <p id="loading-msg">Reading file…</p>
+  <div id="progress-wrap"><div id="progress-bar"></div></div>
+  <p id="loading-detail"></p>
+</div>
+
+<!-- Error -->
+<div id="error-section">
+  <p style="font-size:40px">⚠️</p>
+  <p id="error-msg"></p>
+  <button class="btn" onclick="showUpload()">Try Another File</button>
+</div>
+
+<!-- Viewer -->
+<div id="viewer-section">
+  <div id="stats-bar">
+    <span id="filetype-badge">—</span>
+    <div class="divider"></div>
+    <span class="stat">Rows: <strong id="s-rows">—</strong></span>
+    <div class="divider"></div>
+    <span class="stat">Columns: <strong id="s-cols">—</strong></span>
+    <div class="divider"></div>
+    <span class="stat">File: <strong id="s-file">—</strong></span>
+    <div class="divider"></div>
+    <span class="stat">Size: <strong id="s-size">—</strong></span>
+    <div class="divider"></div>
+    <span class="stat">Showing: <strong id="s-showing">—</strong></span>
+    <span id="delim-badge"></span>
+    <span id="duck-mode-badge">🦆 DuckDB Engine</span>
+    <span id="query-mode-badge" title="Click to exit query mode">
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+      </svg>
+      SQL Query Mode
+    </span>
+  </div>
+
+  <div id="toolbar">
+    <input id="search-box" type="text" placeholder="🔍  Search all columns…"/>
+    <span id="search-info"></span>
+    <button class="btn" id="sql-btn">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+      </svg>
+      SQL Query
+    </button>
+    <button class="btn danger" id="clear-filters-btn" style="display:none">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      Clear Filters
+    </button>
+    <button class="btn" id="col-toggle-btn">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+      Columns
+    </button>
+    <button class="btn" id="csv-opt-btn" style="display:none">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+      </svg>
+      CSV Options
+    </button>
+    <button class="btn" id="load-new-btn" style="margin-left:auto">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      Load New File
+    </button>
+  </div>
+
+  <!-- CSV Options panel -->
+  <div id="csv-options-panel">
+    <h3>CSV Options</h3>
+    <div class="csv-opt-row"><label>Delimiter</label>
+      <select id="opt-delimiter">
+        <option value="auto">Auto-detect</option>
+        <option value=",">, (comma)</option>
+        <option value=";">; (semicolon)</option>
+        <option value="&#9;">⇥ (tab)</option>
+        <option value="|">| (pipe)</option>
+      </select>
+    </div>
+    <div class="csv-opt-row"><label>Has header row</label><input type="checkbox" id="opt-header" checked/></div>
+    <div class="csv-opt-row"><label>Skip empty rows</label><input type="checkbox" id="opt-skip-empty" checked/></div>
+    <div style="margin-top:10px"><button class="btn primary" id="reparse-btn" style="width:100%">Re-parse</button></div>
+  </div>
+
+  <!-- Column panel -->
+  <div id="col-panel"><h3>Toggle Columns</h3><div id="col-panel-list"></div></div>
+
+  <!-- SQL Query panel -->
+  <div id="query-panel">
+    <div class="query-top-row">
+      <textarea id="query-sql" placeholder="SELECT * FROM data WHERE column = 'value' LIMIT 100&#10;&#10;-- Table name is always:  data&#10;-- Press Ctrl+Enter to run"></textarea>
+      <div class="query-btn-col">
+        <button class="btn primary" id="run-query-btn">
+          <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Run
+        </button>
+        <button class="btn" id="close-query-btn">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>Close
+        </button>
+        <span class="query-hint"><kbd>Ctrl</kbd>+<kbd>↵</kbd> to run</span>
+        <span id="query-status"></span>
+      </div>
+    </div>
+    <div id="query-error"></div>
+    <div class="col-chips-row">
+      <span class="col-chips-label">Columns:</span>
+      <div id="col-chips-list"></div>
+    </div>
+  </div>
+
+  <div id="table-wrap">
+    <div id="header-group">
+      <div id="tbl-header"></div>
+      <div id="filter-row"></div>
+    </div>
+    <div id="vbody"></div>
+  </div>
+</div>
+
+<script type="module">
+import { parquetRead, parquetMetadata, parquetMetadataAsync } from 'https://esm.sh/hyparquet@1';
+
+/* ═══════════════════════════════════════════════════════════
+   SHARED STATE
+═══════════════════════════════════════════════════════════ */
+let allRows=[], filteredRows=[], columns=[];
+let colVisible={}, colWidths={}, colFilters={};
+let sortCol=null, sortDir='asc', searchQuery='';
+let queryMode=false, queryResultCols=null, queryResultRows=null;
+let rowObjects=[];
+let currentFile=null, currentFileType=null;   // 'parquet' | 'csv'
+
+// DuckDB (shared by both file types)
+let duckDB=null, duckConn=null, duckMod=null;
+let duckMode=false, duckTotal=0, duckFilter='', duckOrderBy='';
+let duckCache=new Map(), duckFetching=new Set();
+
+// Thresholds
+const DUCK_THRESHOLD_ROWS  = 100_000;   // parquet: row count
+const DUCK_THRESHOLD_BYTES = 5*1024*1024; // csv: file size (5 MB)
+const DUCK_PAGE = 2_000;
+const COL_W=160, COL_MIN=40, ROW_H=32, BUFFER=25;
+
+/* ═══════════════════════════════════════════════════════════
+   DOM REFS
+═══════════════════════════════════════════════════════════ */
+const uploadSection=document.getElementById('upload-section');
+const loadingSection=document.getElementById('loading-section');
+const errorSection=document.getElementById('error-section');
+const viewerSection=document.getElementById('viewer-section');
+const fileInput=document.getElementById('file-input');
+const dropZone=document.getElementById('drop-zone');
+const tableWrap=document.getElementById('table-wrap');
+const headerGroup=document.getElementById('header-group');
+const tblHeader=document.getElementById('tbl-header');
+const filterRow=document.getElementById('filter-row');
+const vbody=document.getElementById('vbody');
+const searchBox=document.getElementById('search-box');
+const searchInfo=document.getElementById('search-info');
+const colPanel=document.getElementById('col-panel');
+const colPanelList=document.getElementById('col-panel-list');
+const clearFiltersBtn=document.getElementById('clear-filters-btn');
+const queryPanel=document.getElementById('query-panel');
+const querySql=document.getElementById('query-sql');
+const queryError=document.getElementById('query-error');
+const queryStatus=document.getElementById('query-status');
+const colChipsList=document.getElementById('col-chips-list');
+const queryModeBadge=document.getElementById('query-mode-badge');
+const csvOptionsPanel=document.getElementById('csv-options-panel');
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION HELPERS
+═══════════════════════════════════════════════════════════ */
+function showUpload()  { uploadSection.style.display='flex'; loadingSection.style.display='none'; errorSection.style.display='none'; viewerSection.style.display='none'; }
+function showLoading() { uploadSection.style.display='none'; loadingSection.style.display='flex'; errorSection.style.display='none'; viewerSection.style.display='none'; }
+function showError(m)  { uploadSection.style.display='none'; loadingSection.style.display='none'; errorSection.style.display='flex'; viewerSection.style.display='none'; document.getElementById('error-msg').textContent=m; }
+function showViewer()  { uploadSection.style.display='none'; loadingSection.style.display='none'; errorSection.style.display='none'; viewerSection.style.display='flex'; }
+window.showUpload=showUpload;
+
+function setProgress(pct,msg,detail) {
+  document.getElementById('progress-bar').style.width=pct+'%';
+  if(msg) document.getElementById('loading-msg').textContent=msg;
+  if(detail) document.getElementById('loading-detail').textContent=detail;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FILE ROUTER — detect type and dispatch
+═══════════════════════════════════════════════════════════ */
+document.getElementById('browse-btn').addEventListener('click',()=>fileInput.click());
+dropZone.addEventListener('click',e=>{ if(e.target.tagName!=='BUTTON')fileInput.click(); });
+fileInput.addEventListener('change',()=>fileInput.files[0]&&loadFile(fileInput.files[0]));
+dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop',e=>{ e.preventDefault(); dropZone.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f)loadFile(f); });
+
+document.getElementById('load-new-btn').addEventListener('click',()=>{
+  resetState(); showUpload();
+});
+
+function resetState() {
+  allRows=[]; filteredRows=[]; columns=[]; colVisible={}; colWidths={}; colFilters={}; rowObjects=[];
+  sortCol=null; searchQuery=''; queryMode=false; queryResultCols=null; queryResultRows=null;
+  duckMode=false; duckTotal=0; duckFilter=''; duckOrderBy=''; duckCache.clear(); duckFetching.clear();
+  currentFile=null; currentFileType=null;
+  searchBox.value=''; searchInfo.textContent=''; clearFiltersBtn.style.display='none';
+  queryPanel.classList.remove('open'); queryModeBadge.classList.remove('visible');
+  document.body.classList.remove('query-mode'); fileInput.value='';
+  document.getElementById('col-widths-style').textContent='';
+  document.getElementById('duck-mode-badge').style.display='none';
+  document.getElementById('delim-badge').style.display='none';
+  document.getElementById('csv-opt-btn').style.display='none';
+}
+
+async function loadFile(file) {
+  resetState();
+  currentFile = file;
+  const ext = file.name.split('.').pop().toLowerCase();
+  currentFileType = (ext==='parquet'||ext==='parq') ? 'parquet' : 'csv';
+  showLoading();
+  setProgress(0, `Reading ${file.name}…`);
+
+  // CSV Options button — only visible for CSV files
+  document.getElementById('csv-opt-btn').style.display = currentFileType==='csv' ? 'inline-flex' : 'none';
+
+  try {
+    if (currentFileType === 'parquet') await loadParquet(file);
+    else                               await loadCSV(file);
+  } catch(err) {
+    console.error(err);
+    showError(`Could not read file.\n\n${err.message}`);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PARQUET ENGINE
+═══════════════════════════════════════════════════════════ */
+async function loadParquet(file) {
+  const lazyBuf = { byteLength:file.size, slice:async(s,e)=>file.slice(s,e).arrayBuffer() };
+  const meta    = await parquetMetadataAsync(lazyBuf);
+  const numRows = Number(meta.num_rows);
+  const schema  = meta.schema||[];
+  columns = schema.slice(1).filter(s=>s.name!==undefined).map(s=>s.name);
+  initColState();
+
+  document.getElementById('filetype-badge').textContent = 'PARQUET';
+  document.getElementById('filetype-badge').className   = 'parquet';
+  document.getElementById('s-cols').textContent = columns.length;
+  document.getElementById('s-file').textContent = file.name;
+  document.getElementById('s-size').textContent = fmtBytes(file.size);
+
+  if (numRows > DUCK_THRESHOLD_ROWS) {
+    duckMode=true; duckFilter=''; duckOrderBy=''; duckCache.clear(); duckFetching.clear();
+    await loadParquetDuckDB(file);
+  } else {
+    duckMode=false;
+    const buf = await file.arrayBuffer();
+    const asyncBuf = { byteLength:buf.byteLength, slice:async(s,e)=>buf.slice(s,e) };
+    allRows=[];
+    await parquetRead({
+      file: asyncBuf,
+      onComplete: rows => {
+        if(rows&&rows.length) allRows.push(...rows);
+        setProgress(numRows>0?Math.round((allRows.length/numRows)*100):50, `Loading rows… ${allRows.length.toLocaleString()} / ${numRows.toLocaleString()}`);
+      },
+    });
+    if(allRows.length&&!Array.isArray(allRows[0])) allRows=allRows.map(r=>columns.map(c=>r[c]));
+    filteredRows=allRows;
+    document.getElementById('s-rows').textContent=allRows.length.toLocaleString();
+    buildAlaSQLTable();
+  }
+  finalizeViewer();
+}
+
+async function loadParquetDuckDB(file) {
+  await ensureDuckDB();
+  setProgress(50,'Registering file with DuckDB…');
+  const protocol=duckMod?.DuckDBDataProtocol?.BROWSER_FILEREADER??2;
+  await duckDB.registerFileHandle('upload.parquet',file,protocol,true);
+  setProgress(65,'Scanning schema…');
+  await duckConn.query("CREATE OR REPLACE VIEW data AS SELECT * FROM read_parquet('upload.parquet')");
+  const schemaRes=await duckConn.query('DESCRIBE data');
+  columns=schemaRes.toArray().map(r=>r.column_name);
+  initColState();
+  document.getElementById('s-cols').textContent=columns.length;
+  setProgress(80,'Counting rows…');
+  const countRes=await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM data');
+  duckTotal=Number(countRes.toArray()[0].n);
+  document.getElementById('s-rows').textContent=duckTotal.toLocaleString();
+  document.getElementById('duck-mode-badge').style.display='inline-flex';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CSV ENGINE
+═══════════════════════════════════════════════════════════ */
+function csvReadOpts() {
+  const d=document.getElementById('opt-delimiter').value;
+  return { delimiter:d==='auto'?'':d, header:document.getElementById('opt-header').checked, dynamicTyping:true, skipEmptyLines:document.getElementById('opt-skip-empty').checked };
+}
+
+async function loadCSV(file) {
+  if (file.size >= DUCK_THRESHOLD_BYTES) {
+    duckMode=true; duckFilter=''; duckOrderBy=''; duckCache.clear(); duckFetching.clear();
+    await loadCSVDuckDB(file);
+  } else {
+    duckMode=false;
+    const opts=csvReadOpts(); let headerSet=false; allRows=[];
+    await new Promise((resolve,reject)=>{
+      Papa.parse(file,{ ...opts, worker:false,
+        step:(result)=>{
+          if(!headerSet){
+            columns=opts.header?(result.meta.fields||Object.keys(result.data)):Object.keys(result.data).map((_,i)=>`Column ${i+1}`);
+            headerSet=true; initColState();
+            document.getElementById('s-cols').textContent=columns.length;
+          }
+          const row=opts.header?columns.map(c=>result.data[c]):Object.values(result.data);
+          allRows.push(row);
+          if(allRows.length%5000===0) setProgress(Math.min(90,Math.round(allRows.length/Math.max(1,file.size/60)*100)),`Parsing… ${allRows.length.toLocaleString()} rows`);
+        },
+        complete:resolve, error:reject,
+      });
+    });
+    filteredRows=allRows;
+    document.getElementById('filetype-badge').textContent=`${file.name.split('.').pop().toUpperCase()}`;
+    document.getElementById('filetype-badge').className='csv';
+    document.getElementById('s-file').textContent=file.name;
+    document.getElementById('s-size').textContent=fmtBytes(file.size);
+    document.getElementById('s-rows').textContent=allRows.length.toLocaleString();
+    buildAlaSQLTable();
+  }
+  finalizeViewer();
+}
+
+async function loadCSVDuckDB(file) {
+  await ensureDuckDB();
+  setProgress(50,'Registering CSV with DuckDB…');
+  const protocol=duckMod?.DuckDBDataProtocol?.BROWSER_FILEREADER??2;
+  await duckDB.registerFileHandle('upload.csv',file,protocol,true);
+  setProgress(65,'Scanning schema…');
+  const d=document.getElementById('opt-delimiter').value;
+  const h=document.getElementById('opt-header').checked;
+  const delimArg=d!=='auto'?`, delim='${d.replace(/'/g,"''")}'`:'';
+  await duckConn.query(`CREATE OR REPLACE VIEW data AS SELECT * FROM read_csv_auto('upload.csv', header=${h}${delimArg})`);
+  const schemaRes=await duckConn.query('DESCRIBE data');
+  columns=schemaRes.toArray().map(r=>r.column_name);
+  initColState();
+  // Detected delimiter
+  try{ const s=await duckConn.query("SELECT Delimiter FROM sniff_csv('upload.csv') LIMIT 1"); const d2=s.toArray()[0]?.Delimiter||','; showDelimBadge(d2); }catch{}
+  setProgress(80,'Counting rows…');
+  const countRes=await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM data');
+  duckTotal=Number(countRes.toArray()[0].n);
+  document.getElementById('filetype-badge').textContent=`${file.name.split('.').pop().toUpperCase()}`;
+  document.getElementById('filetype-badge').className='csv';
+  document.getElementById('s-file').textContent=file.name;
+  document.getElementById('s-size').textContent=fmtBytes(file.size);
+  document.getElementById('s-cols').textContent=columns.length;
+  document.getElementById('s-rows').textContent=duckTotal.toLocaleString();
+  document.getElementById('duck-mode-badge').style.display='inline-flex';
+}
+
+function showDelimBadge(d) {
+  const lbl = d==='\t'?'tab':d===';'?'semicolon':d==='|'?'pipe':'comma';
+  const el=document.getElementById('delim-badge');
+  el.textContent=`delimiter: ${lbl}`; el.style.display='inline-flex';
+}
+
+// CSV re-parse button
+document.getElementById('reparse-btn').addEventListener('click',async()=>{
+  csvOptionsPanel.classList.remove('open');
+  if(!currentFile) return;
+  if(duckMode&&currentFileType==='csv') {
+    showLoading(); setProgress(60,'Applying new options…');
+    try{
+      const d=document.getElementById('opt-delimiter').value;
+      const h=document.getElementById('opt-header').checked;
+      const delimArg=d!=='auto'?`, delim='${d.replace(/'/g,"''")}'`:'';
+      await duckConn.query(`CREATE OR REPLACE VIEW data AS SELECT * FROM read_csv_auto('upload.csv', header=${h}${delimArg})`);
+      const sr=await duckConn.query('DESCRIBE data'); columns=sr.toArray().map(r=>r.column_name);
+      const cr=await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM data'); duckTotal=Number(cr.toArray()[0].n);
+      initColState(); duckFilter=''; duckOrderBy=''; duckCache.clear(); duckFetching.clear();
+      document.getElementById('s-rows').textContent=duckTotal.toLocaleString();
+      document.getElementById('s-cols').textContent=columns.length;
+      updateShowing(); buildColPanel(); buildColChips(); buildHeader(); setupVirtualScroll(); showViewer();
+    }catch(e){showError('Re-parse failed: '+e.message);}
+  } else { loadFile(currentFile); }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   SHARED DUCKDB ENGINE
+═══════════════════════════════════════════════════════════ */
+async function ensureDuckDB() {
+  if(duckDB) return;
+  setProgress(15,'Loading DuckDB engine (~6 MB)…');
+  const mod=await import('https://esm.sh/@duckdb/duckdb-wasm');
+  duckMod=mod;
+  const WASM='https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm/dist/';
+  const bundles={
+    mvp:{mainModule:WASM+'duckdb-mvp.wasm',mainWorker:WASM+'duckdb-browser-mvp.worker.js'},
+    eh: {mainModule:WASM+'duckdb-eh.wasm', mainWorker:WASM+'duckdb-browser-eh.worker.js', pthreadWorker:WASM+'duckdb-browser-eh.pthread.worker.js'},
+  };
+  const bundle=await mod.selectBundle(bundles);
+  const workerUrl=URL.createObjectURL(new Blob([`importScripts("${bundle.mainWorker}");`],{type:'application/javascript'}));
+  const worker=new Worker(workerUrl);
+  duckDB=new mod.AsyncDuckDB(new mod.ConsoleLogger(mod.LogLevel.WARNING),worker);
+  await duckDB.instantiate(bundle.mainModule,bundle.pthreadWorker);
+  URL.revokeObjectURL(workerUrl);
+  duckConn=await duckDB.connect();
+}
+
+function arrowToRows(result,cols){ return result.toArray().map(row=>cols.map(c=>{const v=row[c];if(v===null||v===undefined)return null;if(typeof v==='bigint')return Number(v);return v;})); }
+
+async function fetchDuckPage(pageIdx) {
+  if(duckFetching.has(pageIdx)||duckCache.has(pageIdx))return;
+  duckFetching.add(pageIdx);
+  const offset=pageIdx*DUCK_PAGE, where=duckFilter?`WHERE ${duckFilter}`:'', order=duckOrderBy?`ORDER BY ${duckOrderBy}`:'';
+  try{
+    const res=await duckConn.query(`SELECT * FROM data ${where} ${order} LIMIT ${DUCK_PAGE} OFFSET ${offset}`);
+    duckCache.set(pageIdx,arrowToRows(res,columns)); duckFetching.delete(pageIdx);
+    if(!rafPending){rafPending=true;requestAnimationFrame(()=>{renderRows();rafPending=false;});}
+  }catch(e){console.error('DuckDB fetch:',e);duckFetching.delete(pageIdx);}
+}
+
+function getDuckWindowRows(startIdx,endIdx) {
+  const out=[],startPage=Math.floor(startIdx/DUCK_PAGE),endPage=Math.floor(Math.max(0,endIdx-1)/DUCK_PAGE);
+  for(let p=startPage;p<=endPage;p++){
+    if(!duckCache.has(p))fetchDuckPage(p);
+    const page=duckCache.get(p),pBase=p*DUCK_PAGE;
+    const lo=Math.max(0,startIdx-pBase),hi=Math.min(page?page.length:DUCK_PAGE,endIdx-pBase);
+    for(let i=lo;i<hi;i++)out.push(page?page[i]:null);
+  }
+  return out;
+}
+
+async function updateDuckFilter() {
+  const conds=[];
+  if(searchQuery){const parts=columns.map(c=>`TRY_CAST("${c.replace(/"/g,'""')}" AS VARCHAR) ILIKE '%${searchQuery.replace(/'/g,"''")}%'`);if(parts.length)conds.push(`(${parts.join(' OR ')})`);}
+  columns.forEach(c=>{const f=(colFilters[c]||'').trim();if(f)conds.push(`TRY_CAST("${c.replace(/"/g,'""')}" AS VARCHAR) ILIKE '%${f.replace(/'/g,"''")}%'`);});
+  duckFilter=conds.join(' AND '); duckCache.clear(); duckFetching.clear();
+  const where=duckFilter?`WHERE ${duckFilter}`:'';
+  const cr=await duckConn.query(`SELECT COUNT(*)::BIGINT AS n FROM data ${where}`);
+  duckTotal=Number(cr.toArray()[0].n);
+  const active=conds.length>0;
+  searchInfo.textContent=active?`${duckTotal.toLocaleString()} matches`:'';
+  clearFiltersBtn.style.display=columns.some(c=>(colFilters[c]||'').trim())?'inline-flex':'none';
+  document.getElementById('s-showing').textContent=duckTotal.toLocaleString();
+  setupVirtualScroll();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SHARED FILTER + SEARCH
+═══════════════════════════════════════════════════════════ */
+function applyFilters() {
+  if(duckMode){updateDuckFilter();return;}
+  let rows=allRows;
+  if(searchQuery){const q=searchQuery;rows=rows.filter(row=>row.some(v=>v!==null&&v!==undefined&&String(v).toLowerCase().includes(q)));}
+  const active=columns.map((c,i)=>({i,val:(colFilters[c]||'').trim().toLowerCase()})).filter(f=>f.val);
+  if(active.length)rows=rows.filter(row=>active.every(({i,val})=>{const v=row[i];return v!==null&&v!==undefined&&String(v).toLowerCase().includes(val);}));
+  filteredRows=sortedRows(rows);
+  searchInfo.textContent=(searchQuery||active.length)?`${filteredRows.length.toLocaleString()} match${filteredRows.length!==1?'es':''}`:'';
+  clearFiltersBtn.style.display=active.length?'inline-flex':'none';
+  updateShowing(); setupVirtualScroll();
+}
+
+let searchTimer;
+searchBox.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{searchQuery=searchBox.value.trim().toLowerCase();applyFilters();},250);});
+clearFiltersBtn.addEventListener('click',()=>{
+  columns.forEach(c=>{colFilters[c]='';});
+  filterRow.querySelectorAll('.filter-input').forEach(inp=>{inp.value='';inp.classList.remove('has-value');const x=inp.parentElement.querySelector('.filter-clear-btn');if(x)x.classList.remove('visible');});
+  applyFilters();
+});
+
+/* ═══════════════════════════════════════════════════════════
+   SHARED SORT
+═══════════════════════════════════════════════════════════ */
+function sortBy(col) {
+  if(queryMode)return;
+  if(sortCol===col){sortDir=sortDir==='asc'?'desc':'asc';}else{sortCol=col;sortDir='asc';}
+  if(duckMode){duckOrderBy=`"${col.replace(/"/g,'""')}" ${sortDir.toUpperCase()}`;duckCache.clear();duckFetching.clear();updateSortHeaders();setupVirtualScroll();return;}
+  filteredRows=sortedRows(filteredRows);updateSortHeaders();setupVirtualScroll();
+}
+function sortedRows(rows){
+  if(!sortCol)return rows; const idx=columns.indexOf(sortCol); if(idx===-1)return rows;
+  return [...rows].sort((a,b)=>{const av=a[idx],bv=b[idx];if(av===null||av===undefined)return 1;if(bv===null||bv===undefined)return -1;const l=av<bv?-1:av>bv?1:0;return sortDir==='asc'?l:-l;});
+}
+function updateSortHeaders(){tblHeader.querySelectorAll('.th').forEach(th=>{th.classList.remove('sorted-asc','sorted-desc');if(th.dataset.col===sortCol)th.classList.add('sorted-'+sortDir);});}
+
+/* ═══════════════════════════════════════════════════════════
+   COLUMN VISIBILITY
+═══════════════════════════════════════════════════════════ */
+function visibleCols(){return columns.filter(c=>colVisible[c]);}
+function buildColPanel(){
+  colPanelList.innerHTML='';
+  columns.forEach(c=>{
+    const row=document.createElement('label');row.className='col-toggle-row';
+    row.innerHTML=`<input type="checkbox" ${colVisible[c]?'checked':''} data-col="${c}"> ${c}`;
+    row.querySelector('input').addEventListener('change',e=>{colVisible[c]=e.target.checked;buildHeader();setupVirtualScroll();});
+    colPanelList.appendChild(row);
+  });
+}
+document.getElementById('col-toggle-btn').addEventListener('click',e=>{e.stopPropagation();colPanel.classList.toggle('open');csvOptionsPanel.classList.remove('open');});
+document.getElementById('csv-opt-btn').addEventListener('click',e=>{e.stopPropagation();csvOptionsPanel.classList.toggle('open');colPanel.classList.remove('open');});
+document.addEventListener('click',()=>{colPanel.classList.remove('open');csvOptionsPanel.classList.remove('open');});
+colPanel.addEventListener('click',e=>e.stopPropagation());
+csvOptionsPanel.addEventListener('click',e=>e.stopPropagation());
+
+/* ═══════════════════════════════════════════════════════════
+   DISPLAY STATE + WIDTHS
+═══════════════════════════════════════════════════════════ */
+function getTableState(){
+  if(queryMode&&queryResultCols)return{cols:queryResultCols,rows:queryResultRows,cellVal:(r,i)=>r?r[i]:null,total:queryResultRows.length,isDuck:false};
+  if(duckMode){const vis=visibleCols(),idx=vis.map(c=>columns.indexOf(c));return{cols:vis,rows:null,cellVal:(r,i)=>r?r[idx[i]]:null,total:duckTotal,isDuck:true};}
+  const vis=visibleCols(),idx=vis.map(c=>columns.indexOf(c));
+  return{cols:vis,rows:filteredRows,cellVal:(r,i)=>r[idx[i]],total:filteredRows.length,isDuck:false};
+}
+function applyColWidths(){
+  const{cols}=getTableState();
+  document.getElementById('col-widths-style').textContent=cols.map((col,i)=>{const w=colWidths[col]||COL_W;return`.pv-col-${i}{width:${w}px;min-width:${w}px;max-width:${w}px}`;}).join('\n');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HEADER + FILTER ROW
+═══════════════════════════════════════════════════════════ */
+function buildHeader(){
+  const{cols}=getTableState(); tblHeader.innerHTML='';
+  const rn=document.createElement('div');rn.className='th th-rownum';rn.textContent='#';tblHeader.appendChild(rn);
+  cols.forEach((col,i)=>{
+    const th=document.createElement('div');th.className=`th pv-col-${i}`;th.title=col;th.dataset.col=col;
+    if(!queryMode&&sortCol===col)th.classList.add('sorted-'+sortDir);
+    const label=document.createElement('span');label.textContent=col;label.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none';th.appendChild(label);
+    const handle=document.createElement('div');handle.className='resize-handle';handle.title='Drag to resize';
+    handle.addEventListener('mousedown',e=>startResize(e,col,handle));th.appendChild(handle);
+    th.addEventListener('click',e=>{if(!e.target.classList.contains('resize-handle')&&!queryMode)sortBy(col);});
+    tblHeader.appendChild(th);
+  });
+  applyColWidths();
+  if(queryMode){filterRow.style.display='none';}else{filterRow.style.display='';buildFilterRow();}
+}
+
+function buildFilterRow(){
+  filterRow.innerHTML='';
+  const rn=document.createElement('div');rn.className='filter-cell rownum-cell';
+  rn.innerHTML=`<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:#484f58"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>`;
+  filterRow.appendChild(rn);
+  visibleCols().forEach((col,i)=>{
+    const cell=document.createElement('div');cell.className=`filter-cell pv-col-${i}`;
+    const input=document.createElement('input');input.type='text';input.className='filter-input';input.placeholder='Filter…';input.value=colFilters[col]||'';
+    if(input.value)input.classList.add('has-value');
+    const xBtn=document.createElement('button');xBtn.className='filter-clear-btn'+(input.value?' visible':'');xBtn.textContent='×';xBtn.type='button';
+    xBtn.addEventListener('click',e=>{e.stopPropagation();input.value='';input.classList.remove('has-value');xBtn.classList.remove('visible');colFilters[col]='';applyFilters();input.focus();});
+    let t;
+    input.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>{colFilters[col]=input.value;input.classList.toggle('has-value',input.value.length>0);xBtn.classList.toggle('visible',input.value.length>0);applyFilters();},200);});
+    input.addEventListener('click',e=>e.stopPropagation());
+    cell.appendChild(input);cell.appendChild(xBtn);filterRow.appendChild(cell);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VIRTUAL SCROLL
+═══════════════════════════════════════════════════════════ */
+let rafPending=false;
+function setupVirtualScroll(){
+  const{total,isDuck}=getTableState();
+  vbody.style.height=(total*ROW_H)+'px';vbody.style.position='relative';vbody.innerHTML='';
+  if(isDuck)fetchDuckPage(0);
+  renderRows();
+}
+function renderRows(){
+  const{cols,rows,cellVal,total,isDuck}=getTableState();
+  const scrollTop=tableWrap.scrollTop,viewH=tableWrap.clientHeight-headerGroup.offsetHeight;
+  const startIdx=Math.max(0,Math.floor(scrollTop/ROW_H)-BUFFER);
+  const endIdx=Math.min(total,Math.ceil((scrollTop+viewH)/ROW_H)+BUFFER);
+  vbody.innerHTML='';
+  const frag=document.createDocumentFragment(),hlq=queryMode?'':searchQuery;
+  const duckWin=isDuck?getDuckWindowRows(startIdx,endIdx):null;
+  for(let i=startIdx;i<endIdx;i++){
+    const rowData=isDuck?duckWin[i-startIdx]:rows[i];
+    const div=document.createElement('div');
+    div.className=`row ${i%2===0?'even':'odd'}`;
+    div.style.cssText=`position:absolute;top:${i*ROW_H}px;left:0;right:0;height:${ROW_H}px;display:flex;align-items:center;`;
+    const rn=document.createElement('div');rn.className='td rownum';rn.textContent=(i+1).toLocaleString();div.appendChild(rn);
+    if(rowData===null){
+      cols.forEach((_,colPos)=>{const td=document.createElement('div');td.className=`td pv-col-${colPos}`;td.innerHTML='<span style="background:#21262d;border-radius:3px;display:inline-block;width:60%;height:10px;animation:pulse 1.5s ease-in-out infinite"></span>';div.appendChild(td);});
+    } else {
+      cols.forEach((col,colPos)=>{
+        const val=cellVal(rowData,colPos);
+        const td=document.createElement('div');td.className=`td pv-col-${colPos}`;
+        let text;
+        if(val===null||val===undefined){text='null';td.classList.add('null-val');}
+        else if(val===''){text='empty';td.classList.add('empty-val');}
+        else if(typeof val==='number'||typeof val==='bigint'){text=String(val);td.classList.add('num-val');}
+        else if(typeof val==='boolean'){text=String(val);td.classList.add('bool-val');}
+        else if(val instanceof Date){text=val.toISOString();}
+        else if(typeof val==='object'){text=JSON.stringify(val);}
+        else{text=String(val);}
+        if(hlq&&text.toLowerCase().includes(hlq)){const re=new RegExp(hlq.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');td.innerHTML=text.replace(re,m=>`<mark>${m}</mark>`);}else{td.textContent=text;}
+        td.title=text;div.appendChild(td);
+      });
+    }
+    frag.appendChild(div);
+  }
+  vbody.appendChild(frag);
+}
+tableWrap.addEventListener('scroll',()=>{if(!rafPending){rafPending=true;requestAnimationFrame(()=>{renderRows();rafPending=false;});}});
+
+/* ═══════════════════════════════════════════════════════════
+   SQL AUTOCOMPLETE
+═══════════════════════════════════════════════════════════ */
+const SQL_KW=['SELECT','FROM','WHERE','AND','OR','NOT','IN','LIKE','BETWEEN','GROUP BY','ORDER BY','HAVING','LIMIT','OFFSET','AS','DISTINCT','JOIN','LEFT JOIN','INNER JOIN','ON','UNION','CASE','WHEN','THEN','ELSE','END','ASC','DESC','NULL','TRUE','FALSE','IS NULL','IS NOT NULL','COUNT(*)','*'];
+const SQL_FN=['COUNT(','SUM(','AVG(','MIN(','MAX(','UPPER(','LOWER(','LENGTH(','TRIM(','ROUND(','ABS(','COALESCE(','NULLIF(','CONCAT(','SUBSTR(','REPLACE(','IIF(','CAST('];
+const acDropdown=document.getElementById('ac-dropdown');
+let acItems=[],acActiveIdx=-1,acWordStart=0,acWordEnd=0;
+function safeColName(col){return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(col)?col:`\`${col}\``;}
+function getCurrentToken(ta){const pos=ta.selectionStart,text=ta.value;let s=pos;while(s>0&&/[\w`]/.test(text[s-1]))s--;return{word:text.slice(s,pos),start:s,end:pos};}
+function contextSuggestions(ta){const before=ta.value.slice(0,ta.selectionStart).toUpperCase().trimEnd();if(/\b(FROM|JOIN)\s+$/.test(before))return[{text:'data',type:'table'}];if(/\bSELECT\s+$/.test(before))return[{text:'*',type:'keyword'},...columns.slice(0,6).map(c=>({text:safeColName(c),type:'column'}))];return[];}
+function buildSuggestions(word,ta){
+  if(!word)return contextSuggestions(ta);
+  const q=word.toLowerCase().replace(/^`/,'');const results=[];const seen=new Set();
+  const push=item=>{if(!seen.has(item.text)){seen.add(item.text);results.push(item);}};
+  columns.forEach(col=>{if(col.toLowerCase().startsWith(q))push({text:safeColName(col),type:'column'});});
+  if('data'.startsWith(q))push({text:'data',type:'table'});
+  SQL_FN.forEach(fn=>{if(fn.toLowerCase().startsWith(q))push({text:fn,type:'func'});});
+  SQL_KW.forEach(kw=>{if(kw.toLowerCase().startsWith(q))push({text:kw,type:'keyword'});});
+  return results.slice(0,12);
+}
+function getCaretCoords(ta){const cs=getComputedStyle(ta),rc=ta.getBoundingClientRect(),pos=ta.selectionStart;const mirror=document.createElement('div');mirror.style.cssText=`position:fixed;top:${rc.top}px;left:${rc.left}px;width:${rc.width}px;height:${rc.height}px;visibility:hidden;overflow:hidden;white-space:pre-wrap;word-wrap:break-word;box-sizing:${cs.boxSizing};padding:${cs.padding};border:${cs.borderTopWidth} solid transparent;font:${cs.font};line-height:${cs.lineHeight};`;mirror.textContent=ta.value.slice(0,pos);const caret=document.createElement('span');caret.textContent='​';mirror.appendChild(caret);mirror.scrollTop=ta.scrollTop;document.body.appendChild(mirror);const cr=caret.getBoundingClientRect();document.body.removeChild(mirror);const dropH=Math.min(acItems.length||8,8)*34+30;const top=window.innerHeight-cr.bottom-8>=dropH?cr.bottom+4:cr.top-dropH-4;return{top:Math.max(8,top),left:Math.max(8,cr.left)};}
+function showAC(items){
+  if(!items.length){hideAC();return;}acItems=items;acActiveIdx=0;acDropdown.innerHTML='';
+  let lastType=null;
+  items.forEach((item,idx)=>{
+    if(lastType&&item.type!==lastType&&items.length>3){const d=document.createElement('div');d.style.cssText='height:1px;background:#21262d;margin:3px 0';acDropdown.appendChild(d);}
+    lastType=item.type;
+    const row=document.createElement('div');row.className='ac-item'+(idx===0?' active':'');
+    const lbl=document.createElement('span');lbl.className='ac-label';lbl.textContent=item.text;
+    const badge=document.createElement('span');badge.className=`ac-type ${item.type}`;badge.textContent=item.type==='func'?'fn':item.type.slice(0,3);
+    row.appendChild(lbl);row.appendChild(badge);
+    row.addEventListener('mousedown',e=>{e.preventDefault();applyAC(idx);});
+    acDropdown.appendChild(row);
+  });
+  const footer=document.createElement('div');footer.className='ac-footer';footer.innerHTML='<kbd>↑↓</kbd> navigate &nbsp; <kbd>Tab</kbd> select &nbsp; <kbd>Esc</kbd> close';acDropdown.appendChild(footer);
+  const coords=getCaretCoords(querySql);acDropdown.style.top=coords.top+'px';acDropdown.style.left=coords.left+'px';acDropdown.style.display='block';
+}
+function hideAC(){acDropdown.style.display='none';acItems=[];acActiveIdx=-1;}
+function setACActive(idx){acActiveIdx=Math.max(0,Math.min(idx,acItems.length-1));acDropdown.querySelectorAll('.ac-item').forEach((el,i)=>el.classList.toggle('active',i===acActiveIdx));acDropdown.querySelectorAll('.ac-item')[acActiveIdx]?.scrollIntoView({block:'nearest'});}
+function applyAC(idx){const item=acItems[idx>=0?idx:acActiveIdx];if(!item)return;const val=querySql.value;querySql.value=val.slice(0,acWordStart)+item.text+val.slice(acWordEnd);querySql.selectionStart=querySql.selectionEnd=acWordStart+item.text.length;hideAC();querySql.focus();}
+querySql.addEventListener('input',()=>{if(!columns.length)return;const tok=getCurrentToken(querySql);acWordStart=tok.start;acWordEnd=tok.end;showAC(buildSuggestions(tok.word,querySql));});
+querySql.addEventListener('keydown',e=>{
+  const open=acDropdown.style.display!=='none';
+  if(open){if(e.key==='ArrowDown'){e.preventDefault();setACActive(acActiveIdx+1);return;}if(e.key==='ArrowUp'){e.preventDefault();setACActive(acActiveIdx-1);return;}if(e.key==='Escape'){hideAC();return;}if((e.key==='Tab'||e.key==='Enter')&&!e.ctrlKey&&!e.metaKey){e.preventDefault();applyAC(acActiveIdx);return;}}
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();hideAC();runQuery();return;}
+  if(e.ctrlKey&&e.key===' '){e.preventDefault();const tok=getCurrentToken(querySql);acWordStart=tok.start;acWordEnd=tok.end;showAC(buildSuggestions(tok.word,querySql));}
+});
+querySql.addEventListener('blur',()=>setTimeout(hideAC,150));
+document.addEventListener('click',e=>{if(e.target!==querySql&&!acDropdown.contains(e.target))hideAC();});
+
+/* ═══════════════════════════════════════════════════════════
+   SQL QUERY PANEL
+═══════════════════════════════════════════════════════════ */
+function buildColChips(){
+  colChipsList.innerHTML='';
+  columns.forEach(col=>{
+    const chip=document.createElement('span');chip.className='col-chip';const safe=safeColName(col);chip.textContent=safe;
+    chip.addEventListener('click',()=>{const s=querySql.selectionStart,e2=querySql.selectionEnd,v=querySql.value;const prefix=(s>0&&v[s-1]!==' '&&v[s-1]!=='\n')?' ':'';querySql.value=v.slice(0,s)+prefix+safe+v.slice(e2);querySql.selectionStart=querySql.selectionEnd=s+prefix.length+safe.length;querySql.focus();});
+    colChipsList.appendChild(chip);
+  });
+}
+
+async function runQuery(){
+  const sql=querySql.value.trim();if(!sql)return;
+  queryError.classList.remove('visible');queryStatus.classList.remove('visible');
+  try{
+    let resultCols,resultRows;
+    if(duckMode&&duckConn){
+      const res=await duckConn.query(sql);
+      if(!res?.schema){queryStatus.textContent='✓ Query executed';queryStatus.classList.add('visible');return;}
+      resultCols=res.schema.fields.map(f=>f.name);resultRows=arrowToRows(res,resultCols);
+    } else {
+      if(!window.alasql){showQErr('AlaSQL not loaded.');return;}
+      const results=alasql(sql);
+      if(!Array.isArray(results)){queryStatus.textContent=`✓ Result: ${JSON.stringify(results)}`;queryStatus.classList.add('visible');return;}
+      resultCols=results.length>0?Object.keys(results[0]):columns.slice();
+      resultRows=results.map(obj=>resultCols.map(c=>obj[c]));
+    }
+    queryResultCols=resultCols;queryResultRows=resultRows;queryMode=true;sortCol=null;
+    document.body.classList.add('query-mode');queryModeBadge.classList.add('visible');
+    queryStatus.textContent=`✓ ${resultRows.length.toLocaleString()} row${resultRows.length!==1?'s':''} returned`;queryStatus.classList.add('visible');
+    document.getElementById('s-showing').textContent=resultRows.length.toLocaleString();
+    buildHeader();setupVirtualScroll();
+  }catch(err){showQErr(err.message);}
+}
+
+function showQErr(m){queryError.textContent='⚠ '+m;queryError.classList.add('visible');}
+function clearQuery(){queryMode=false;queryResultCols=null;queryResultRows=null;document.body.classList.remove('query-mode');queryModeBadge.classList.remove('visible');queryError.classList.remove('visible');queryStatus.classList.remove('visible');updateShowing();buildHeader();setupVirtualScroll();}
+
+document.getElementById('sql-btn').addEventListener('click',()=>{queryPanel.classList.toggle('open');if(queryPanel.classList.contains('open'))querySql.focus();});
+document.getElementById('run-query-btn').addEventListener('click',runQuery);
+document.getElementById('close-query-btn').addEventListener('click',()=>{queryPanel.classList.remove('open');if(queryMode)clearQuery();});
+queryModeBadge.addEventListener('click',()=>{queryPanel.classList.remove('open');clearQuery();});
+
+/* ═══════════════════════════════════════════════════════════
+   COLUMN RESIZE
+═══════════════════════════════════════════════════════════ */
+let resizeState=null;
+const resizeLine=document.getElementById('resize-line');
+function startResize(e,colName,handle){e.preventDefault();e.stopPropagation();resizeState={colName,startX:e.clientX,startW:colWidths[colName]||COL_W,handle};handle.classList.add('active');resizeLine.style.display='block';resizeLine.style.left=e.clientX+'px';document.body.style.cursor='col-resize';document.body.style.userSelect='none';document.addEventListener('mousemove',onResizeMove);document.addEventListener('mouseup',onResizeEnd);}
+function onResizeMove(e){if(!resizeState)return;colWidths[resizeState.colName]=Math.max(COL_MIN,resizeState.startW+(e.clientX-resizeState.startX));applyColWidths();resizeLine.style.left=e.clientX+'px';}
+function onResizeEnd(){if(!resizeState)return;resizeState.handle.classList.remove('active');resizeState=null;resizeLine.style.display='none';document.body.style.cursor='';document.body.style.userSelect='';document.removeEventListener('mousemove',onResizeMove);document.removeEventListener('mouseup',onResizeEnd);}
+
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════ */
+function initColState(){colVisible={};colWidths={};colFilters={};columns.forEach(c=>{colVisible[c]=true;colWidths[c]=COL_W;colFilters[c]='';});}
+function buildAlaSQLTable(){
+  rowObjects=allRows.map(row=>{const obj={};columns.forEach((c,i)=>{obj[c]=row[i];});return obj;});
+  if(window.alasql){alasql('DROP TABLE IF EXISTS `data`');alasql('CREATE TABLE `data`');alasql.tables['data'].data=rowObjects;}
+}
+function finalizeViewer(){
+  queryPanel.classList.remove('open');querySql.value='';queryError.classList.remove('visible');queryStatus.classList.remove('visible');queryModeBadge.classList.remove('visible');document.body.classList.remove('query-mode');
+  updateShowing();buildColPanel();buildColChips();buildHeader();setupVirtualScroll();showViewer();
+}
+function updateShowing(){let n;if(queryMode&&queryResultRows)n=queryResultRows.length;else if(duckMode)n=duckTotal;else n=filteredRows.length;document.getElementById('s-showing').textContent=n.toLocaleString();}
+function fmtBytes(b){if(b<1024)return b+' B';if(b<1024**2)return(b/1024).toFixed(1)+' KB';if(b<1024**3)return(b/1024**2).toFixed(1)+' MB';return(b/1024**3).toFixed(2)+' GB';}
+</script>
+</body>
+</html>
