@@ -21,25 +21,66 @@
     #app-header .subtitle { font-size: 12px; color: #8b949e; margin-left: 4px; }
 
     /* ── Upload ── */
-    #upload-section { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; }
-    #drop-zone {
+    #upload-section {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px 40px; gap: 24px; overflow-y: auto;
+    }
+
+    /* ── Mode Tiles ── */
+    #tile-selector { text-align: center; width: 100%; }
+    #tile-selector > p { font-size: 12px; color: #8b949e; margin-bottom: 14px; }
+    .tile-grid { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .tile {
+      background: #161b22; border: 2px solid #30363d;
+      border-radius: 12px; padding: 20px; cursor: pointer;
+      width: 230px; text-align: left;
+      transition: border-color .15s, background .15s;
+    }
+    .tile:hover  { border-color: #58a6ff; background: rgba(88,166,255,.04); }
+    .tile.active { border-color: #58a6ff; background: rgba(88,166,255,.07); }
+    .tile-icon { margin-bottom: 10px; color: #58a6ff; }
+    .tile-name { font-size: 14px; font-weight: 600; color: #e6edf3; margin-bottom: 5px; }
+    .tile-desc { font-size: 12px; color: #8b949e; line-height: 1.5; margin-bottom: 12px; }
+    .tile-fmts { display: flex; gap: 5px; flex-wrap: wrap; }
+    .tfmt { font-size: 10px; padding: 2px 7px; border-radius: 5px; font-family: monospace; font-weight: 600; }
+    .tfmt.csv     { background: rgba(63,185,80,.1);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+    .tfmt.parquet { background: rgba(88,166,255,.1); color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
+    .tfmt.ehr     { background: rgba(227,179,65,.1); color: #e3b341; border: 1px solid rgba(227,179,65,.3); }
+
+    /* ── Drop zones ── */
+    #drop-zone, #ehr-drop-zone {
       width: 100%; max-width: 560px; border: 2px dashed #30363d; border-radius: 14px;
       padding: 48px 32px; text-align: center; cursor: pointer;
       transition: border-color .2s, background .2s;
       display: flex; flex-direction: column; align-items: center; gap: 14px;
     }
-    #drop-zone:hover, #drop-zone.drag-over { border-color: #58a6ff; background: rgba(88,166,255,.04); }
-    #drop-zone .dz-title { font-size: 18px; font-weight: 600; color: #e6edf3; }
-    #drop-zone .dz-sub   { font-size: 13px; color: #8b949e; }
-    .format-badges { display: flex; gap: 8px; justify-content: center; }
+    #drop-zone:hover, #drop-zone.drag-over,
+    #ehr-drop-zone:hover, #ehr-drop-zone.drag-over {
+      border-color: #58a6ff; background: rgba(88,166,255,.04);
+    }
+    #drop-zone .dz-title, #ehr-drop-zone .dz-title { font-size: 18px; font-weight: 600; color: #e6edf3; }
+    #drop-zone .dz-sub,   #ehr-drop-zone .dz-sub   { font-size: 13px; color: #8b949e; }
+    .format-badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
     .format-badge {
       padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
       font-family: monospace; letter-spacing: .3px;
     }
     .format-badge.parquet { background: rgba(88,166,255,.12); color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
     .format-badge.csv     { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
-    #drop-zone .dz-hint { font-size: 11px; color: #484f58; }
-    #file-input { display: none; }
+    .format-badge.ehr     { background: rgba(227,179,65,.12); color: #e3b341; border: 1px solid rgba(227,179,65,.3); }
+    #drop-zone .dz-hint, #ehr-drop-zone .dz-hint { font-size: 11px; color: #484f58; }
+    #file-input, #ehr-file-input { display: none; }
+
+    /* EHR extracted-fields preview */
+    .ehr-fields-preview {
+      display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+      font-size: 11px;
+    }
+    .ehr-field-chip {
+      padding: 2px 9px; border-radius: 10px; font-weight: 500;
+      background: rgba(227,179,65,.1); color: #e3b341; border: 1px solid rgba(227,179,65,.25);
+    }
 
     .btn {
       display: inline-flex; align-items: center; gap: 6px;
@@ -77,13 +118,13 @@
     }
     #stats-bar .stat strong { color: #e6edf3; }
     #stats-bar .divider { width: 1px; height: 14px; background: #30363d; flex-shrink: 0; }
-    /* File type badge — changes colour per format */
     #filetype-badge {
       padding: 2px 9px; border-radius: 6px; font-size: 10px; font-weight: 700;
       font-family: monospace; flex-shrink: 0;
     }
     #filetype-badge.parquet { background: rgba(88,166,255,.12); color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
     #filetype-badge.csv     { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+    #filetype-badge.ehr     { background: rgba(227,179,65,.12); color: #e3b341; border: 1px solid rgba(227,179,65,.3); }
     #delim-badge {
       display: none; padding: 2px 8px; background: rgba(63,185,80,.1);
       border: 1px solid rgba(63,185,80,.3); border-radius: 10px;
@@ -232,6 +273,79 @@
     .td mark      { background: #3d4f2a; color: #b5e853; border-radius: 2px; padding: 0 1px; }
     body.query-mode .th { cursor: default; }
     body.query-mode .th:hover { background: transparent; color: #8b949e; }
+
+    /* ── EHR Stats ── */
+    #ehr-stats-section {
+      display: none; flex-shrink: 0;
+      padding: 10px 16px; background: #0a0d13; border-bottom: 1px solid #21262d;
+    }
+    #ehr-stats-section.visible { display: block; }
+    .ehr-stat-grid {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+    }
+    .ehr-stat-card {
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .ehr-stat-label {
+      font-size: 10px; color: #8b949e; text-transform: uppercase;
+      letter-spacing: .05em; margin-bottom: 4px;
+    }
+    .ehr-stat-value {
+      font-size: 18px; font-weight: 600; color: #58a6ff;
+    }
+    .ehr-stat-value.sm { font-size: 12px; line-height: 1.5; }
+    /* Memory tooltip */
+    .mem-anchor { position: relative; display: inline-flex; align-items: center; cursor: default; }
+    .mem-tip {
+      display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+      transform: translateX(-50%); width: 270px;
+      background: #1c2128; border: 1px solid #30363d; border-radius: 8px;
+      padding: 11px 13px; font-size: 11px; line-height: 1.6; color: #c9d1d9;
+      font-weight: 400; text-transform: none; letter-spacing: 0;
+      box-shadow: 0 8px 24px rgba(0,0,0,.6); z-index: 200; pointer-events: none;
+      white-space: normal;
+    }
+    .mem-tip code { background: #0d1117; padding: 1px 5px; border-radius: 3px; font-size: 10px; color: #79c0ff; }
+    .mem-tip kbd  { background: #21262d; border: 1px solid #30363d; padding: 1px 5px; border-radius: 3px; font-size: 10px; }
+    .mem-tip::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 6px solid transparent; border-top-color: #30363d;
+    }
+    .mem-anchor:hover .mem-tip { display: block; }
+    .mem-bar-wrap { margin-top: 6px; background: #21262d; border-radius: 3px; height: 4px; overflow: hidden; }
+    .mem-bar-fill { height: 100%; border-radius: 3px; background: #58a6ff; transition: width .6s, background .6s; width: 0%; }
+
+    /* ── EHR Filter panel ── */
+    #ehr-filter-section {
+      display: none; flex-shrink: 0;
+      padding: 10px 16px; background: #0a0d13; border-bottom: 2px solid #30363d;
+    }
+    #ehr-filter-section.visible { display: block; }
+    .ehr-filter-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;
+      align-items: end;
+    }
+    .ehr-filter-group label {
+      display: block; font-size: 10px; color: #8b949e;
+      text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px;
+    }
+    .ehr-filter-group input,
+    .ehr-filter-group select {
+      width: 100%; background: #161b22; border: 1px solid #30363d;
+      border-radius: 6px; color: #c9d1d9; padding: 6px 10px; font-size: 12px;
+      outline: none; transition: border-color .15s; appearance: none;
+    }
+    .ehr-filter-group input:focus,
+    .ehr-filter-group select:focus { border-color: #58a6ff; }
+    .ehr-filter-group input.active { border-color: #3fb950; background: rgba(63,185,80,.06); }
+    #ehr-reset-btn {
+      width: 100%; padding: 7px; font-size: 12px;
+      background: #21262d; border: 1px solid #30363d;
+      border-radius: 6px; color: #c9d1d9; cursor: pointer;
+      transition: background .15s;
+    }
+    #ehr-reset-btn:hover { background: #30363d; }
   </style>
   <style id="col-widths-style"></style>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5/papaparse.min.js"></script>
@@ -248,11 +362,61 @@
     <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
   </svg>
   <h1>Data Viewer</h1>
-  <span class="subtitle">— open &amp; explore Parquet and CSV files in your browser</span>
+  <span class="subtitle">— open &amp; explore your data files in the browser</span>
 </div>
 
 <!-- Upload -->
 <div id="upload-section">
+
+  <!-- Tile selector -->
+  <div id="tile-selector">
+    <p>Choose what you want to view</p>
+    <div class="tile-grid">
+
+      <!-- Data Viewer tile -->
+      <div class="tile active" id="tile-data" onclick="switchTile('data')">
+        <div class="tile-icon">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+        </div>
+        <div class="tile-name">Data viewer</div>
+        <div class="tile-desc">View and query any structured data file with filters and SQL</div>
+        <div class="tile-fmts">
+          <span class="tfmt parquet">.parquet</span>
+          <span class="tfmt parquet">.parq</span>
+          <span class="tfmt csv">.csv</span>
+          <span class="tfmt csv">.tsv</span>
+          <span class="tfmt csv">.txt</span>
+        </div>
+      </div>
+
+      <!-- EHR Path Log tile -->
+      <div class="tile" id="tile-ehr" onclick="switchTile('ehr')">
+        <div class="tile-icon" style="color:#e3b341">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+        </div>
+        <div class="tile-name">EHR path log</div>
+        <div class="tile-desc">Parse raw EHR file path logs — extracts Date, Time, Provider, Hospital, User ID and Resource</div>
+        <div class="tile-fmts">
+          <span class="tfmt ehr">.csv</span>
+          <span class="tfmt ehr">.txt</span>
+          <span class="tfmt ehr">.log</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Data Viewer drop zone (default) -->
   <div id="drop-zone">
     <svg width="48" height="48" fill="none" stroke="#58a6ff" stroke-width="1.5" viewBox="0 0 24 24" opacity=".85">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -270,6 +434,34 @@
     <p class="dz-hint">All processing is local — no data leaves your browser</p>
     <input type="file" id="file-input" accept=".parquet,.parq,.csv,.tsv,.txt">
   </div>
+
+  <!-- EHR drop zone (hidden until EHR tile selected) -->
+  <div id="ehr-drop-zone" style="display:none">
+    <svg width="48" height="48" fill="none" stroke="#e3b341" stroke-width="1.5" viewBox="0 0 24 24" opacity=".85">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    <p class="dz-title">Drop your EHR path log file</p>
+    <div class="format-badges">
+      <span class="format-badge ehr">.csv</span>
+      <span class="format-badge ehr">.txt</span>
+      <span class="format-badge ehr">.log</span>
+      <span class="format-badge parquet">.parquet</span>
+      <span class="format-badge parquet">.parq</span>
+    </div>
+    <button class="btn primary" id="ehr-browse-btn" style="background:#8a6914;border-color:#e3b341">Choose File</button>
+    <p class="dz-hint">Supports 40M+ rows · text and Parquet · no data leaves your browser</p>
+    <div class="ehr-fields-preview">
+      <span class="ehr-field-chip">Date</span>
+      <span class="ehr-field-chip">Time</span>
+      <span class="ehr-field-chip">Provider</span>
+      <span class="ehr-field-chip">Hospital</span>
+      <span class="ehr-field-chip">User ID</span>
+      <span class="ehr-field-chip">Resource</span>
+    </div>
+    <input type="file" id="ehr-file-input" accept=".csv,.txt,.log,.parquet,.parq">
+  </div>
+
 </div>
 
 <!-- Loading -->
@@ -303,12 +495,96 @@
     <span class="stat">Showing: <strong id="s-showing">—</strong></span>
     <span id="delim-badge"></span>
     <span id="duck-mode-badge">🦆 DuckDB Engine</span>
+    <!-- Memory indicator — shown for all file modes once a file is loaded -->
+    <span id="mem-stat" style="display:none;margin-left:auto;align-items:center;gap:8px;flex-shrink:0;">
+      <div class="divider"></div>
+      <span class="mem-anchor" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="opacity:.5;flex-shrink:0;">
+          <circle cx="8" cy="8" r="7.5" stroke="currentColor"/>
+          <path d="M8 7v5M8 5.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        JS Heap:&nbsp;<strong id="mem-used" style="color:#e6edf3;">—</strong>
+        <span id="mem-pct" style="color:#8b949e;font-size:11px;"></span>
+        <span style="display:inline-block;width:48px;height:5px;background:#21262d;border-radius:3px;overflow:hidden;vertical-align:middle;">
+          <span id="mem-bar" style="display:block;height:100%;width:0%;background:#58a6ff;border-radius:3px;transition:width .6s,background .6s;"></span>
+        </span>
+        <span class="mem-tip" style="right:0;left:auto;transform:none;">
+          <strong>JS Heap only — not total RAM.</strong><br><br>
+          DuckDB stores data in <strong>WebAssembly memory</strong>, which is a separate region not counted here. Actual tab RAM is typically 3–10× higher for large files.<br><br>
+          To see real usage: <kbd>Shift+Esc</kbd> → Chrome Task Manager.
+        </span>
+      </span>
+    </span>
     <span id="query-mode-badge" title="Click to exit query mode">
       <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
       </svg>
       SQL Query Mode
     </span>
+  </div>
+
+  <!-- EHR Stats (shown only in EHR mode) -->
+  <div id="ehr-stats-section">
+    <div class="ehr-stat-grid">
+      <div class="ehr-stat-card">
+        <div class="ehr-stat-label">Total Rows</div>
+        <div class="ehr-stat-value" id="ehr-s-total">—</div>
+      </div>
+      <div class="ehr-stat-card">
+        <div class="ehr-stat-label">Filtered Rows</div>
+        <div class="ehr-stat-value" id="ehr-s-filtered">—</div>
+      </div>
+      <div class="ehr-stat-card">
+        <div class="ehr-stat-label">Unique Providers</div>
+        <div class="ehr-stat-value" id="ehr-s-providers">—</div>
+      </div>
+      <div class="ehr-stat-card">
+        <div class="ehr-stat-label">Unique Hospitals</div>
+        <div class="ehr-stat-value" id="ehr-s-hospitals">—</div>
+      </div>
+      <div class="ehr-stat-card">
+        <div class="ehr-stat-label">Unique Resources</div>
+        <div class="ehr-stat-value" id="ehr-s-resources">—</div>
+      </div>
+      <div class="ehr-stat-card">
+        <div class="ehr-stat-label">Date Range</div>
+        <div class="ehr-stat-value sm" id="ehr-s-daterange">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EHR Filter panel (shown only in EHR mode) -->
+  <div id="ehr-filter-section">
+    <div class="ehr-filter-grid">
+      <div class="ehr-filter-group">
+        <label>Date From</label>
+        <input type="date" id="ehr-f-date-from">
+      </div>
+      <div class="ehr-filter-group">
+        <label>Date To</label>
+        <input type="date" id="ehr-f-date-to">
+      </div>
+      <div class="ehr-filter-group">
+        <label>Provider</label>
+        <select id="ehr-f-provider"><option value="">All Providers</option></select>
+      </div>
+      <div class="ehr-filter-group">
+        <label>Hospital</label>
+        <select id="ehr-f-hospital"><option value="">All Hospitals</option></select>
+      </div>
+      <div class="ehr-filter-group">
+        <label>Resource</label>
+        <select id="ehr-f-resource"><option value="">All Resources</option></select>
+      </div>
+      <div class="ehr-filter-group">
+        <label>User ID</label>
+        <input type="text" id="ehr-f-userid" placeholder="e.g. 23822">
+      </div>
+      <div class="ehr-filter-group">
+        <label>&nbsp;</label>
+        <button id="ehr-reset-btn">↺ Reset Filters</button>
+      </div>
+    </div>
   </div>
 
   <div id="toolbar">
@@ -415,7 +691,8 @@ let colVisible={}, colWidths={}, colFilters={};
 let sortCol=null, sortDir='asc', searchQuery='';
 let queryMode=false, queryResultCols=null, queryResultRows=null;
 let rowObjects=[];
-let currentFile=null, currentFileType=null;   // 'parquet' | 'csv'
+let currentFile=null, currentFileType=null;   // 'parquet' | 'csv' | 'ehr'
+let selectedMode = 'data';                     // 'data' | 'ehr'
 
 // DuckDB (shared by both file types)
 let duckDB=null, duckConn=null, duckMod=null;
@@ -423,10 +700,16 @@ let duckMode=false, duckTotal=0, duckFilter='', duckOrderBy='';
 let duckCache=new Map(), duckFetching=new Set();
 
 // Thresholds
-const DUCK_THRESHOLD_ROWS  = 100_000;   // parquet: row count
-const DUCK_THRESHOLD_BYTES = 5*1024*1024; // csv: file size (5 MB)
+const DUCK_THRESHOLD_ROWS  = 100_000;
+const DUCK_THRESHOLD_BYTES = 5*1024*1024;
 const DUCK_PAGE = 2_000;
 const COL_W=160, COL_MIN=40, ROW_H=32, BUFFER=25;
+
+// EHR constants
+const LINE_RE = /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+[\d.]+\s+\S+\s+\S*EHRSERVICE\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)\//;
+const EHR_COLS = ['date','time','provider','hospital','user_id','resource'];
+const EHR_CHUNK = 32 * 1024 * 1024;
+const EHR_BATCH = 50_000;
 
 /* ═══════════════════════════════════════════════════════════
    DOM REFS
@@ -436,7 +719,9 @@ const loadingSection=document.getElementById('loading-section');
 const errorSection=document.getElementById('error-section');
 const viewerSection=document.getElementById('viewer-section');
 const fileInput=document.getElementById('file-input');
+const ehrFileInput=document.getElementById('ehr-file-input');
 const dropZone=document.getElementById('drop-zone');
+const ehrDropZone=document.getElementById('ehr-drop-zone');
 const tableWrap=document.getElementById('table-wrap');
 const headerGroup=document.getElementById('header-group');
 const tblHeader=document.getElementById('tbl-header');
@@ -456,6 +741,17 @@ const queryModeBadge=document.getElementById('query-mode-badge');
 const csvOptionsPanel=document.getElementById('csv-options-panel');
 
 /* ═══════════════════════════════════════════════════════════
+   TILE SWITCHER
+═══════════════════════════════════════════════════════════ */
+window.switchTile = function(mode) {
+  selectedMode = mode;
+  document.getElementById('tile-data').classList.toggle('active', mode === 'data');
+  document.getElementById('tile-ehr').classList.toggle('active',  mode === 'ehr');
+  dropZone.style.display    = mode === 'data' ? 'flex' : 'none';
+  ehrDropZone.style.display = mode === 'ehr'  ? 'flex' : 'none';
+};
+
+/* ═══════════════════════════════════════════════════════════
    SECTION HELPERS
 ═══════════════════════════════════════════════════════════ */
 function showUpload()  { uploadSection.style.display='flex'; loadingSection.style.display='none'; errorSection.style.display='none'; viewerSection.style.display='none'; }
@@ -466,23 +762,30 @@ window.showUpload=showUpload;
 
 function setProgress(pct,msg,detail) {
   document.getElementById('progress-bar').style.width=pct+'%';
-  if(msg) document.getElementById('loading-msg').textContent=msg;
-  if(detail) document.getElementById('loading-detail').textContent=detail;
+  if(msg)    document.getElementById('loading-msg').textContent=msg;
+  if(detail!==undefined) document.getElementById('loading-detail').textContent=detail||'';
 }
 
 /* ═══════════════════════════════════════════════════════════
-   FILE ROUTER — detect type and dispatch
+   FILE ROUTER
 ═══════════════════════════════════════════════════════════ */
 document.getElementById('browse-btn').addEventListener('click',()=>fileInput.click());
+document.getElementById('ehr-browse-btn').addEventListener('click',()=>ehrFileInput.click());
 dropZone.addEventListener('click',e=>{ if(e.target.tagName!=='BUTTON')fileInput.click(); });
+ehrDropZone.addEventListener('click',e=>{ if(e.target.tagName!=='BUTTON')ehrFileInput.click(); });
+
 fileInput.addEventListener('change',()=>fileInput.files[0]&&loadFile(fileInput.files[0]));
+ehrFileInput.addEventListener('change',()=>ehrFileInput.files[0]&&loadEHRFile(ehrFileInput.files[0]));
+
 dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop',e=>{ e.preventDefault(); dropZone.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f)loadFile(f); });
 
-document.getElementById('load-new-btn').addEventListener('click',()=>{
-  resetState(); showUpload();
-});
+ehrDropZone.addEventListener('dragover', e=>{ e.preventDefault(); ehrDropZone.classList.add('drag-over'); });
+ehrDropZone.addEventListener('dragleave',()=>ehrDropZone.classList.remove('drag-over'));
+ehrDropZone.addEventListener('drop',e=>{ e.preventDefault(); ehrDropZone.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f)loadEHRFile(f); });
+
+document.getElementById('load-new-btn').addEventListener('click',()=>{ resetState(); showUpload(); });
 
 function resetState() {
   allRows=[]; filteredRows=[]; columns=[]; colVisible={}; colWidths={}; colFilters={}; rowObjects=[];
@@ -491,11 +794,21 @@ function resetState() {
   currentFile=null; currentFileType=null;
   searchBox.value=''; searchInfo.textContent=''; clearFiltersBtn.style.display='none';
   queryPanel.classList.remove('open'); queryModeBadge.classList.remove('visible');
-  document.body.classList.remove('query-mode'); fileInput.value='';
+  document.body.classList.remove('query-mode'); fileInput.value=''; ehrFileInput.value='';
   document.getElementById('col-widths-style').textContent='';
   document.getElementById('duck-mode-badge').style.display='none';
   document.getElementById('delim-badge').style.display='none';
   document.getElementById('csv-opt-btn').style.display='none';
+  document.getElementById('ehr-stats-section').classList.remove('visible');
+  document.getElementById('ehr-filter-section').classList.remove('visible');
+  if (memInterval) { clearInterval(memInterval); memInterval = null; }
+  document.getElementById('mem-stat').style.display = 'none';
+  document.getElementById('mem-used').textContent = '—';
+  document.getElementById('mem-pct').textContent  = '';
+  document.getElementById('mem-bar').style.width  = '0%';
+  ['ehr-f-date-from','ehr-f-date-to','ehr-f-userid'].forEach(id=>{ document.getElementById(id).value=''; });
+  ['ehr-f-provider','ehr-f-hospital','ehr-f-resource'].forEach(id=>{ document.getElementById(id).innerHTML='<option value="">All</option>'; });
+  querySql.placeholder="SELECT * FROM data WHERE column = 'value' LIMIT 100\n\n-- Table name is always:  data\n-- Press Ctrl+Enter to run";
 }
 
 async function loadFile(file) {
@@ -505,10 +818,7 @@ async function loadFile(file) {
   currentFileType = (ext==='parquet'||ext==='parq') ? 'parquet' : 'csv';
   showLoading();
   setProgress(0, `Reading ${file.name}…`);
-
-  // CSV Options button — only visible for CSV files
   document.getElementById('csv-opt-btn').style.display = currentFileType==='csv' ? 'inline-flex' : 'none';
-
   try {
     if (currentFileType === 'parquet') await loadParquet(file);
     else                               await loadCSV(file);
@@ -519,38 +829,325 @@ async function loadFile(file) {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   EHR PATH LOG ENGINE
+═══════════════════════════════════════════════════════════ */
+
+async function loadEHRParquet(file) {
+  resetState();
+  currentFile = file;
+  currentFileType = 'ehr';
+  showLoading();
+  setProgress(5, `Initializing DuckDB for ${file.name}…`, '');
+
+  try {
+    await ensureDuckDB();
+
+    // Register the parquet file
+    setProgress(20, 'Reading Parquet schema…', '');
+    const protocol = duckMod?.DuckDBDataProtocol?.BROWSER_FILEREADER ?? 2;
+    await duckDB.registerFileHandle('ehr_upload.parquet', file, protocol, true);
+
+    // Read schema to find the column containing the raw log lines
+    const schemaRes = await duckConn.query("DESCRIBE SELECT * FROM read_parquet('ehr_upload.parquet')");
+    const allCols   = schemaRes.toArray().map(r => r.column_name);
+
+    setProgress(35, 'Detecting log column…', '');
+    const sampleRes = await duckConn.query("SELECT * FROM read_parquet('ehr_upload.parquet') LIMIT 5");
+    const sampleRows = sampleRes.toArray();
+
+    // Find the column whose values contain 'EHRSERVICE'
+    let logCol = null;
+    for (const col of allCols) {
+      if (sampleRows.some(row => String(row[col] ?? '').includes('EHRSERVICE'))) {
+        logCol = col; break;
+      }
+    }
+    // Fallback to first column if none matched
+    if (!logCol) logCol = allCols[0];
+
+    const qCol = `"${logCol.replace(/"/g, '""')}"`;
+    setProgress(50, 'Extracting EHR fields via SQL…', `Parsing column: "${logCol}"`);
+
+    await duckConn.query('DROP TABLE IF EXISTS ehr_paths');
+    await duckConn.query(`
+      CREATE TABLE ehr_paths AS
+      SELECT
+        regexp_extract(${qCol}, '^(\\d{4}-\\d{2}-\\d{2})', 1)                     AS date,
+        regexp_extract(${qCol}, '^\\d{4}-\\d{2}-\\d{2}\\s+(\\d{2}:\\d{2}:\\d{2})', 1) AS time,
+        regexp_extract(${qCol}, 'EHRSERVICE/([^/]+)/',         1)                  AS provider,
+        regexp_extract(${qCol}, 'EHRSERVICE/[^/]+/([^/]+)/',   1)                  AS hospital,
+        regexp_extract(${qCol}, 'EHRSERVICE/[^/]+/[^/]+/([^/]+)/',      1)         AS user_id,
+        regexp_extract(${qCol}, 'EHRSERVICE/[^/]+/[^/]+/[^/]+/([^/]+)/', 1)        AS resource
+      FROM read_parquet('ehr_upload.parquet')
+      WHERE ${qCol} LIKE '%EHRSERVICE%'
+    `);
+
+    setProgress(85, 'Counting rows…', '');
+    const countRes   = await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM ehr_paths');
+    const totalRows  = Number(countRes.toArray()[0].n);
+
+    await duckConn.query('CREATE OR REPLACE VIEW data AS SELECT * FROM ehr_paths');
+    columns   = [...EHR_COLS];
+    duckMode  = true;
+    duckTotal = totalRows;
+    duckFilter = ''; duckOrderBy = ''; duckCache.clear(); duckFetching.clear();
+    initColState();
+
+    document.getElementById('filetype-badge').textContent = 'EHR PARQUET';
+    document.getElementById('filetype-badge').className   = 'ehr';
+    document.getElementById('s-file').textContent = file.name;
+    document.getElementById('s-size').textContent = fmtBytes(file.size);
+    document.getElementById('s-rows').textContent = totalRows.toLocaleString();
+    document.getElementById('s-cols').textContent = columns.length;
+    document.getElementById('duck-mode-badge').style.display = 'inline-flex';
+
+    querySql.placeholder =
+      'SELECT * FROM ehr_paths LIMIT 100\n\n' +
+      '-- Tables: ehr_paths  (or alias: data)\n' +
+      '-- Columns: date · time · provider · hospital · user_id · resource\n' +
+      '-- Press Ctrl+Enter to run';
+
+    finalizeViewer();
+    filterRow.style.display = 'none';
+    await showEHRStats();
+    await loadEHRFilterOptions();
+
+  } catch(err) {
+    console.error(err);
+    showError(`Could not parse EHR Parquet file.\n\n${err.message}`);
+  }
+}
+
+function parseEHRLine(line) {
+  const m = LINE_RE.exec(line);
+  if (!m) return null;
+  return [m[1], m[2], m[3], m[4], m[5], m[6]];
+}
+function sqlEsc(s) { return s.replace(/'/g, "''"); }
+
+async function isRealParquet(file) {
+  // Parquet files always end with the 4-byte magic: PAR1 (0x50 0x41 0x52 0x31)
+  if (file.size < 4) return false;
+  const buf   = await file.slice(file.size - 4).arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  return bytes[0]===80 && bytes[1]===65 && bytes[2]===82 && bytes[3]===49;
+}
+
+// ── Fast path: let DuckDB read + regex the file in one native query ──
+async function loadEHRTextDuckDB(file) {
+  const protocol = duckMod?.DuckDBDataProtocol?.BROWSER_FILEREADER ?? 2;
+  await duckDB.registerFileHandle('ehr_text', file, protocol, true);
+
+  setProgress(40, 'DuckDB extracting EHR fields…', 'Vectorised scan — no JS loop');
+
+  await duckConn.query('DROP TABLE IF EXISTS ehr_paths');
+  await duckConn.query(`
+    CREATE TABLE ehr_paths AS
+    SELECT
+      regexp_extract(column0, '^(\\d{4}-\\d{2}-\\d{2})', 1)                               AS date,
+      regexp_extract(column0, '^\\d{4}-\\d{2}-\\d{2}\\s+(\\d{2}:\\d{2}:\\d{2})', 1)       AS time,
+      regexp_extract(column0, 'EHRSERVICE/([^/]+)/',                              1)       AS provider,
+      regexp_extract(column0, 'EHRSERVICE/[^/]+/([^/]+)/',                        1)       AS hospital,
+      regexp_extract(column0, 'EHRSERVICE/[^/]+/[^/]+/([^/]+)/',                  1)       AS user_id,
+      regexp_extract(column0, 'EHRSERVICE/[^/]+/[^/]+/[^/]+/([^/]+)/',            1)       AS resource
+    FROM read_csv('ehr_text', sep=chr(1), header=false,
+                  auto_detect=false, all_varchar=true, ignore_errors=true)
+    WHERE column0 LIKE '%EHRSERVICE%'
+  `);
+
+  setProgress(90, 'Counting rows…', '');
+  const cr = await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM ehr_paths');
+  return Number(cr.toArray()[0].n);
+}
+
+async function loadEHRFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'parquet' || ext === 'parq') {
+    if (await isRealParquet(file)) {
+      await loadEHRParquet(file);
+      return;
+    }
+    // Extension says parquet but magic bytes say otherwise — treat as text log
+  }
+  resetState();
+  currentFile = file;
+  currentFileType = 'ehr';
+  showLoading();
+  setProgress(5, `Initializing DuckDB for ${file.name}…`, '');
+
+  try {
+    await ensureDuckDB();
+
+    // ── Fast path: DuckDB native — only for files ≤ 300 MB ──
+    // Larger files buffer too much in WASM memory; streaming is safer.
+    const EHR_DUCK_LIMIT = 300 * 1024 * 1024;
+    let totalParsed = 0;
+    let fastOk = false;
+    if (file.size <= EHR_DUCK_LIMIT) {
+      try {
+        setProgress(20, 'Registering file with DuckDB…', 'Vectorised engine (file ≤ 300 MB)');
+        totalParsed = await loadEHRTextDuckDB(file);
+        fastOk = true;
+      } catch(fastErr) {
+        console.warn('DuckDB native read failed, falling back to JS streaming:', fastErr.message);
+      }
+    } else {
+      setProgress(12, 'Large file detected…', 'Using memory-efficient streaming (file > 300 MB)');
+    }
+
+    // ── Streaming path: memory-safe for large files ──
+    if (!fastOk) {
+      setProgress(12, 'Creating EHR table…', '');
+      await duckConn.query('DROP TABLE IF EXISTS ehr_paths');
+      await duckConn.query(`
+        CREATE TABLE ehr_paths (
+          date VARCHAR, time VARCHAR, provider VARCHAR,
+          hospital VARCHAR, user_id VARCHAR, resource VARCHAR
+        )
+      `);
+      setProgress(15, 'Streaming file…', 'Parsing lines and extracting fields');
+      const fileSize = file.size;
+      let batch=[], totalErrors=0;
+      let leftover='', bytesRead=0;
+      let t0=Date.now(), lastT=t0, lastRows=0;
+
+      for (let offset=0; offset<fileSize; offset+=EHR_CHUNK) {
+        const slice  = file.slice(offset, Math.min(offset+EHR_CHUNK, fileSize));
+        const buffer = await slice.arrayBuffer();
+        const text   = new TextDecoder('utf-8',{fatal:false}).decode(buffer);
+        bytesRead   += buffer.byteLength;
+        const full  = leftover + text;
+        const lines = full.split('\n');
+        leftover    = lines.pop() ?? '';
+
+        for (const raw of lines) {
+          const line = raw.trim();
+          if (!line) continue;
+          const parsed = parseEHRLine(line);
+          if (parsed) { batch.push(parsed); totalParsed++; }
+          else         { totalErrors++; }
+
+          if (batch.length >= EHR_BATCH) {
+            const vals = batch.map(r =>
+              `('${sqlEsc(r[0])}','${sqlEsc(r[1])}','${sqlEsc(r[2])}','${sqlEsc(r[3])}','${sqlEsc(r[4])}','${sqlEsc(r[5])}')`
+            ).join(',');
+            await duckConn.query(`INSERT INTO ehr_paths VALUES ${vals}`);
+            batch=[];
+            const now=Date.now(), dt=(now-lastT)/1000;
+            const speed=dt>0.1?Math.round((totalParsed-lastRows)/dt):0;
+            const elapsed=(now-t0)/1000;
+            const etaSec=elapsed>0?Math.round((fileSize-bytesRead)/(fileSize/elapsed)):0;
+            const pct=15+(bytesRead/fileSize)*80;
+            const elapsedFmt=elapsed<60?`${Math.floor(elapsed)}s`:`${Math.floor(elapsed/60)}m ${Math.floor(elapsed%60)}s`;
+            setProgress(pct, `Parsing… ${totalParsed.toLocaleString()} rows`,
+              `${speed?speed.toLocaleString()+'/s':'—'} · Elapsed: ${elapsedFmt} · ETA: ${etaSec?Math.floor(etaSec/60)+'m '+Math.floor(etaSec%60)+'s':'—'} · Errors: ${totalErrors.toLocaleString()}`);
+            lastT=now; lastRows=totalParsed;
+            await new Promise(r=>setTimeout(r,0));
+          }
+        }
+      }
+      if (leftover.trim()) { const p=parseEHRLine(leftover.trim()); if(p){batch.push(p);totalParsed++;} }
+      if (batch.length) {
+        const vals=batch.map(r=>`('${sqlEsc(r[0])}','${sqlEsc(r[1])}','${sqlEsc(r[2])}','${sqlEsc(r[3])}','${sqlEsc(r[4])}','${sqlEsc(r[5])}')`).join(',');
+        await duckConn.query(`INSERT INTO ehr_paths VALUES ${vals}`);
+      }
+    } // end fallback
+
+    setProgress(97, 'Finalizing…', 'Creating query view');
+    // Alias as 'data' so existing viewer code works unchanged
+    await duckConn.query('CREATE OR REPLACE VIEW data AS SELECT * FROM ehr_paths');
+
+    columns   = [...EHR_COLS];
+    duckMode  = true;
+    duckTotal = totalParsed;
+    duckFilter=''; duckOrderBy=''; duckCache.clear(); duckFetching.clear();
+    initColState();
+
+    document.getElementById('filetype-badge').textContent = 'EHR LOG';
+    document.getElementById('filetype-badge').className   = 'ehr';
+    document.getElementById('s-file').textContent = file.name;
+    document.getElementById('s-size').textContent = fmtBytes(file.size);
+    document.getElementById('s-rows').textContent = totalParsed.toLocaleString();
+    document.getElementById('s-cols').textContent = columns.length;
+    document.getElementById('duck-mode-badge').style.display='inline-flex';
+
+    querySql.placeholder =
+      'SELECT * FROM ehr_paths LIMIT 100\n\n' +
+      '-- Tables: ehr_paths  (or alias: data)\n' +
+      '-- Columns: date · time · provider · hospital · user_id · resource\n' +
+      '-- Press Ctrl+Enter to run';
+
+    finalizeViewer();
+    // Hide the generic per-column filter row for EHR — dedicated panel is used instead
+    filterRow.style.display = 'none';
+    await showEHRStats();
+    await loadEHRFilterOptions();
+
+  } catch(err) {
+    console.error(err);
+    showError(`Could not parse EHR file.\n\n${err.message}`);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
    PARQUET ENGINE
 ═══════════════════════════════════════════════════════════ */
+
+// Codecs hyparquet cannot decompress — route these to DuckDB automatically
+const HYPARQUET_UNSUPPORTED_CODECS = ['ZSTD','LZO','BROTLI','LZ4_RAW'];
+
+function parquetNeedsDuck(meta) {
+  // Returns true if any column chunk uses a codec hyparquet can't handle
+  return (meta.row_groups || []).some(rg =>
+    (rg.columns || []).some(col => {
+      const codec = col?.meta_data?.codec;
+      return codec && HYPARQUET_UNSUPPORTED_CODECS.includes(String(codec).toUpperCase());
+    })
+  );
+}
+
 async function loadParquet(file) {
-  const lazyBuf = { byteLength:file.size, slice:async(s,e)=>file.slice(s,e).arrayBuffer() };
-  const meta    = await parquetMetadataAsync(lazyBuf);
-  const numRows = Number(meta.num_rows);
-  const schema  = meta.schema||[];
-  columns = schema.slice(1).filter(s=>s.name!==undefined).map(s=>s.name);
+  const lazyBuf={byteLength:file.size,slice:async(s,e)=>file.slice(s,e).arrayBuffer()};
+  let meta;
+  try {
+    meta = await parquetMetadataAsync(lazyBuf);
+  } catch(parqErr) {
+    // Not a valid Parquet file despite the extension — fall back to CSV/text
+    console.warn('Parquet metadata read failed, falling back to CSV:', parqErr.message);
+    currentFileType = 'csv';
+    document.getElementById('csv-opt-btn').style.display = 'inline-flex';
+    await loadCSV(file);
+    return;
+  }
+  const numRows=Number(meta.num_rows);
+  const schema=meta.schema||[];
+  columns=schema.slice(1).filter(s=>s.name!==undefined).map(s=>s.name);
   initColState();
 
-  document.getElementById('filetype-badge').textContent = 'PARQUET';
-  document.getElementById('filetype-badge').className   = 'parquet';
-  document.getElementById('s-cols').textContent = columns.length;
-  document.getElementById('s-file').textContent = file.name;
-  document.getElementById('s-size').textContent = fmtBytes(file.size);
+  document.getElementById('filetype-badge').textContent='PARQUET';
+  document.getElementById('filetype-badge').className='parquet';
+  document.getElementById('s-cols').textContent=columns.length;
+  document.getElementById('s-file').textContent=file.name;
+  document.getElementById('s-size').textContent=fmtBytes(file.size);
 
-  if (numRows > DUCK_THRESHOLD_ROWS) {
+  const needsDuck = numRows > DUCK_THRESHOLD_ROWS || parquetNeedsDuck(meta);
+
+  if (needsDuck) {
     duckMode=true; duckFilter=''; duckOrderBy=''; duckCache.clear(); duckFetching.clear();
     await loadParquetDuckDB(file);
   } else {
     duckMode=false;
-    const buf = await file.arrayBuffer();
-    const asyncBuf = { byteLength:buf.byteLength, slice:async(s,e)=>buf.slice(s,e) };
+    const buf=await file.arrayBuffer();
+    const asyncBuf={byteLength:buf.byteLength,slice:async(s,e)=>buf.slice(s,e)};
     allRows=[];
     await parquetRead({
-      file: asyncBuf,
-      onComplete: rows => {
-        if(rows&&rows.length) allRows.push(...rows);
-        setProgress(numRows>0?Math.round((allRows.length/numRows)*100):50, `Loading rows… ${allRows.length.toLocaleString()} / ${numRows.toLocaleString()}`);
+      file:asyncBuf,
+      onComplete:rows=>{
+        if(rows&&rows.length)allRows.push(...rows);
+        setProgress(numRows>0?Math.round((allRows.length/numRows)*100):50,`Loading rows… ${allRows.length.toLocaleString()} / ${numRows.toLocaleString()}`);
       },
     });
-    if(allRows.length&&!Array.isArray(allRows[0])) allRows=allRows.map(r=>columns.map(c=>r[c]));
+    if(allRows.length&&!Array.isArray(allRows[0]))allRows=allRows.map(r=>columns.map(c=>r[c]));
     filteredRows=allRows;
     document.getElementById('s-rows').textContent=allRows.length.toLocaleString();
     buildAlaSQLTable();
@@ -581,7 +1178,7 @@ async function loadParquetDuckDB(file) {
 ═══════════════════════════════════════════════════════════ */
 function csvReadOpts() {
   const d=document.getElementById('opt-delimiter').value;
-  return { delimiter:d==='auto'?'':d, header:document.getElementById('opt-header').checked, dynamicTyping:true, skipEmptyLines:document.getElementById('opt-skip-empty').checked };
+  return{delimiter:d==='auto'?'':d,header:document.getElementById('opt-header').checked,dynamicTyping:true,skipEmptyLines:document.getElementById('opt-skip-empty').checked};
 }
 
 async function loadCSV(file) {
@@ -592,7 +1189,7 @@ async function loadCSV(file) {
     duckMode=false;
     const opts=csvReadOpts(); let headerSet=false; allRows=[];
     await new Promise((resolve,reject)=>{
-      Papa.parse(file,{ ...opts, worker:false,
+      Papa.parse(file,{...opts,worker:false,
         step:(result)=>{
           if(!headerSet){
             columns=opts.header?(result.meta.fields||Object.keys(result.data)):Object.keys(result.data).map((_,i)=>`Column ${i+1}`);
@@ -601,9 +1198,9 @@ async function loadCSV(file) {
           }
           const row=opts.header?columns.map(c=>result.data[c]):Object.values(result.data);
           allRows.push(row);
-          if(allRows.length%5000===0) setProgress(Math.min(90,Math.round(allRows.length/Math.max(1,file.size/60)*100)),`Parsing… ${allRows.length.toLocaleString()} rows`);
+          if(allRows.length%5000===0)setProgress(Math.min(90,Math.round(allRows.length/Math.max(1,file.size/60)*100)),`Parsing… ${allRows.length.toLocaleString()} rows`);
         },
-        complete:resolve, error:reject,
+        complete:resolve,error:reject,
       });
     });
     filteredRows=allRows;
@@ -626,12 +1223,20 @@ async function loadCSVDuckDB(file) {
   const d=document.getElementById('opt-delimiter').value;
   const h=document.getElementById('opt-header').checked;
   const delimArg=d!=='auto'?`, delim='${d.replace(/'/g,"''")}'`:'';
-  await duckConn.query(`CREATE OR REPLACE VIEW data AS SELECT * FROM read_csv_auto('upload.csv', header=${h}${delimArg})`);
+  // Sniff a few rows first — catch EHR log files dropped on the wrong tile
+  try {
+    const sniff=await duckConn.query("SELECT * FROM read_csv_auto('upload.csv', header=false, ignore_errors=true, sample_size=5) LIMIT 5");
+    const firstVal=sniff.toArray().length?String(Object.values(sniff.toArray()[0])[0]||''):'';
+    if(firstVal.includes('EHRSERVICE')){
+      showError('This looks like an EHR path log file.\n\nPlease go back and use the "EHR path log" tile — it will correctly extract the Date, Time, Provider, Hospital, User ID, and Resource columns.\n\nThe Data Viewer tile treats this as a plain CSV which breaks on hospital names containing commas.');
+      return;
+    }
+  }catch{}
+  await duckConn.query(`CREATE OR REPLACE VIEW data AS SELECT * FROM read_csv_auto('upload.csv', header=${h}${delimArg}, ignore_errors=true)`);
   const schemaRes=await duckConn.query('DESCRIBE data');
   columns=schemaRes.toArray().map(r=>r.column_name);
   initColState();
-  // Detected delimiter
-  try{ const s=await duckConn.query("SELECT Delimiter FROM sniff_csv('upload.csv') LIMIT 1"); const d2=s.toArray()[0]?.Delimiter||','; showDelimBadge(d2); }catch{}
+  try{const s=await duckConn.query("SELECT Delimiter FROM sniff_csv('upload.csv') LIMIT 1");const d2=s.toArray()[0]?.Delimiter||',';showDelimBadge(d2);}catch{}
   setProgress(80,'Counting rows…');
   const countRes=await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM data');
   duckTotal=Number(countRes.toArray()[0].n);
@@ -644,45 +1249,40 @@ async function loadCSVDuckDB(file) {
   document.getElementById('duck-mode-badge').style.display='inline-flex';
 }
 
-function showDelimBadge(d) {
-  const lbl = d==='\t'?'tab':d===';'?'semicolon':d==='|'?'pipe':'comma';
-  const el=document.getElementById('delim-badge');
-  el.textContent=`delimiter: ${lbl}`; el.style.display='inline-flex';
-}
+function showDelimBadge(d){const lbl=d==='\t'?'tab':d===';'?'semicolon':d==='|'?'pipe':'comma';const el=document.getElementById('delim-badge');el.textContent=`delimiter: ${lbl}`;el.style.display='inline-flex';}
 
-// CSV re-parse button
 document.getElementById('reparse-btn').addEventListener('click',async()=>{
   csvOptionsPanel.classList.remove('open');
-  if(!currentFile) return;
-  if(duckMode&&currentFileType==='csv') {
-    showLoading(); setProgress(60,'Applying new options…');
+  if(!currentFile)return;
+  if(duckMode&&currentFileType==='csv'){
+    showLoading();setProgress(60,'Applying new options…');
     try{
       const d=document.getElementById('opt-delimiter').value;
       const h=document.getElementById('opt-header').checked;
       const delimArg=d!=='auto'?`, delim='${d.replace(/'/g,"''")}'`:'';
-      await duckConn.query(`CREATE OR REPLACE VIEW data AS SELECT * FROM read_csv_auto('upload.csv', header=${h}${delimArg})`);
-      const sr=await duckConn.query('DESCRIBE data'); columns=sr.toArray().map(r=>r.column_name);
-      const cr=await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM data'); duckTotal=Number(cr.toArray()[0].n);
-      initColState(); duckFilter=''; duckOrderBy=''; duckCache.clear(); duckFetching.clear();
+      await duckConn.query(`CREATE OR REPLACE VIEW data AS SELECT * FROM read_csv_auto('upload.csv', header=${h}${delimArg}, ignore_errors=true)`);
+      const sr=await duckConn.query('DESCRIBE data');columns=sr.toArray().map(r=>r.column_name);
+      const cr=await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM data');duckTotal=Number(cr.toArray()[0].n);
+      initColState();duckFilter='';duckOrderBy='';duckCache.clear();duckFetching.clear();
       document.getElementById('s-rows').textContent=duckTotal.toLocaleString();
       document.getElementById('s-cols').textContent=columns.length;
-      updateShowing(); buildColPanel(); buildColChips(); buildHeader(); setupVirtualScroll(); showViewer();
+      updateShowing();buildColPanel();buildColChips();buildHeader();setupVirtualScroll();showViewer();
     }catch(e){showError('Re-parse failed: '+e.message);}
-  } else { loadFile(currentFile); }
+  }else{loadFile(currentFile);}
 });
 
 /* ═══════════════════════════════════════════════════════════
    SHARED DUCKDB ENGINE
 ═══════════════════════════════════════════════════════════ */
 async function ensureDuckDB() {
-  if(duckDB) return;
+  if(duckDB)return;
   setProgress(15,'Loading DuckDB engine (~6 MB)…');
   const mod=await import('https://esm.sh/@duckdb/duckdb-wasm');
   duckMod=mod;
   const WASM='https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm/dist/';
   const bundles={
     mvp:{mainModule:WASM+'duckdb-mvp.wasm',mainWorker:WASM+'duckdb-browser-mvp.worker.js'},
-    eh: {mainModule:WASM+'duckdb-eh.wasm', mainWorker:WASM+'duckdb-browser-eh.worker.js', pthreadWorker:WASM+'duckdb-browser-eh.pthread.worker.js'},
+    eh: {mainModule:WASM+'duckdb-eh.wasm', mainWorker:WASM+'duckdb-browser-eh.worker.js',pthreadWorker:WASM+'duckdb-browser-eh.pthread.worker.js'},
   };
   const bundle=await mod.selectBundle(bundles);
   const workerUrl=URL.createObjectURL(new Blob([`importScripts("${bundle.mainWorker}");`],{type:'application/javascript'}));
@@ -693,20 +1293,20 @@ async function ensureDuckDB() {
   duckConn=await duckDB.connect();
 }
 
-function arrowToRows(result,cols){ return result.toArray().map(row=>cols.map(c=>{const v=row[c];if(v===null||v===undefined)return null;if(typeof v==='bigint')return Number(v);return v;})); }
+function arrowToRows(result,cols){return result.toArray().map(row=>cols.map(c=>{const v=row[c];if(v===null||v===undefined)return null;if(typeof v==='bigint')return Number(v);return v;}));}
 
-async function fetchDuckPage(pageIdx) {
+async function fetchDuckPage(pageIdx){
   if(duckFetching.has(pageIdx)||duckCache.has(pageIdx))return;
   duckFetching.add(pageIdx);
-  const offset=pageIdx*DUCK_PAGE, where=duckFilter?`WHERE ${duckFilter}`:'', order=duckOrderBy?`ORDER BY ${duckOrderBy}`:'';
+  const offset=pageIdx*DUCK_PAGE,where=duckFilter?`WHERE ${duckFilter}`:'',order=duckOrderBy?`ORDER BY ${duckOrderBy}`:'';
   try{
     const res=await duckConn.query(`SELECT * FROM data ${where} ${order} LIMIT ${DUCK_PAGE} OFFSET ${offset}`);
-    duckCache.set(pageIdx,arrowToRows(res,columns)); duckFetching.delete(pageIdx);
+    duckCache.set(pageIdx,arrowToRows(res,columns));duckFetching.delete(pageIdx);
     if(!rafPending){rafPending=true;requestAnimationFrame(()=>{renderRows();rafPending=false;});}
   }catch(e){console.error('DuckDB fetch:',e);duckFetching.delete(pageIdx);}
 }
 
-function getDuckWindowRows(startIdx,endIdx) {
+function getDuckWindowRows(startIdx,endIdx){
   const out=[],startPage=Math.floor(startIdx/DUCK_PAGE),endPage=Math.floor(Math.max(0,endIdx-1)/DUCK_PAGE);
   for(let p=startPage;p<=endPage;p++){
     if(!duckCache.has(p))fetchDuckPage(p);
@@ -717,11 +1317,11 @@ function getDuckWindowRows(startIdx,endIdx) {
   return out;
 }
 
-async function updateDuckFilter() {
+async function updateDuckFilter(){
   const conds=[];
   if(searchQuery){const parts=columns.map(c=>`TRY_CAST("${c.replace(/"/g,'""')}" AS VARCHAR) ILIKE '%${searchQuery.replace(/'/g,"''")}%'`);if(parts.length)conds.push(`(${parts.join(' OR ')})`);}
   columns.forEach(c=>{const f=(colFilters[c]||'').trim();if(f)conds.push(`TRY_CAST("${c.replace(/"/g,'""')}" AS VARCHAR) ILIKE '%${f.replace(/'/g,"''")}%'`);});
-  duckFilter=conds.join(' AND '); duckCache.clear(); duckFetching.clear();
+  duckFilter=conds.join(' AND ');duckCache.clear();duckFetching.clear();
   const where=duckFilter?`WHERE ${duckFilter}`:'';
   const cr=await duckConn.query(`SELECT COUNT(*)::BIGINT AS n FROM data ${where}`);
   duckTotal=Number(cr.toArray()[0].n);
@@ -735,7 +1335,7 @@ async function updateDuckFilter() {
 /* ═══════════════════════════════════════════════════════════
    SHARED FILTER + SEARCH
 ═══════════════════════════════════════════════════════════ */
-function applyFilters() {
+function applyFilters(){
   if(duckMode){updateDuckFilter();return;}
   let rows=allRows;
   if(searchQuery){const q=searchQuery;rows=rows.filter(row=>row.some(v=>v!==null&&v!==undefined&&String(v).toLowerCase().includes(q)));}
@@ -744,7 +1344,7 @@ function applyFilters() {
   filteredRows=sortedRows(rows);
   searchInfo.textContent=(searchQuery||active.length)?`${filteredRows.length.toLocaleString()} match${filteredRows.length!==1?'es':''}`:'';
   clearFiltersBtn.style.display=active.length?'inline-flex':'none';
-  updateShowing(); setupVirtualScroll();
+  updateShowing();setupVirtualScroll();
 }
 
 let searchTimer;
@@ -758,15 +1358,15 @@ clearFiltersBtn.addEventListener('click',()=>{
 /* ═══════════════════════════════════════════════════════════
    SHARED SORT
 ═══════════════════════════════════════════════════════════ */
-function sortBy(col) {
+function sortBy(col){
   if(queryMode)return;
   if(sortCol===col){sortDir=sortDir==='asc'?'desc':'asc';}else{sortCol=col;sortDir='asc';}
   if(duckMode){duckOrderBy=`"${col.replace(/"/g,'""')}" ${sortDir.toUpperCase()}`;duckCache.clear();duckFetching.clear();updateSortHeaders();setupVirtualScroll();return;}
   filteredRows=sortedRows(filteredRows);updateSortHeaders();setupVirtualScroll();
 }
 function sortedRows(rows){
-  if(!sortCol)return rows; const idx=columns.indexOf(sortCol); if(idx===-1)return rows;
-  return [...rows].sort((a,b)=>{const av=a[idx],bv=b[idx];if(av===null||av===undefined)return 1;if(bv===null||bv===undefined)return -1;const l=av<bv?-1:av>bv?1:0;return sortDir==='asc'?l:-l;});
+  if(!sortCol)return rows;const idx=columns.indexOf(sortCol);if(idx===-1)return rows;
+  return[...rows].sort((a,b)=>{const av=a[idx],bv=b[idx];if(av===null||av===undefined)return 1;if(bv===null||bv===undefined)return -1;const l=av<bv?-1:av>bv?1:0;return sortDir==='asc'?l:-l;});
 }
 function updateSortHeaders(){tblHeader.querySelectorAll('.th').forEach(th=>{th.classList.remove('sorted-asc','sorted-desc');if(th.dataset.col===sortCol)th.classList.add('sorted-'+sortDir);});}
 
@@ -807,7 +1407,7 @@ function applyColWidths(){
    HEADER + FILTER ROW
 ═══════════════════════════════════════════════════════════ */
 function buildHeader(){
-  const{cols}=getTableState(); tblHeader.innerHTML='';
+  const{cols}=getTableState();tblHeader.innerHTML='';
   const rn=document.createElement('div');rn.className='th th-rownum';rn.textContent='#';tblHeader.appendChild(rn);
   cols.forEach((col,i)=>{
     const th=document.createElement('div');th.className=`th pv-col-${i}`;th.title=col;th.dataset.col=col;
@@ -866,7 +1466,7 @@ function renderRows(){
     const rn=document.createElement('div');rn.className='td rownum';rn.textContent=(i+1).toLocaleString();div.appendChild(rn);
     if(rowData===null){
       cols.forEach((_,colPos)=>{const td=document.createElement('div');td.className=`td pv-col-${colPos}`;td.innerHTML='<span style="background:#21262d;border-radius:3px;display:inline-block;width:60%;height:10px;animation:pulse 1.5s ease-in-out infinite"></span>';div.appendChild(td);});
-    } else {
+    }else{
       cols.forEach((col,colPos)=>{
         const val=cellVal(rowData,colPos);
         const td=document.createElement('div');td.className=`td pv-col-${colPos}`;
@@ -895,15 +1495,22 @@ const SQL_KW=['SELECT','FROM','WHERE','AND','OR','NOT','IN','LIKE','BETWEEN','GR
 const SQL_FN=['COUNT(','SUM(','AVG(','MIN(','MAX(','UPPER(','LOWER(','LENGTH(','TRIM(','ROUND(','ABS(','COALESCE(','NULLIF(','CONCAT(','SUBSTR(','REPLACE(','IIF(','CAST('];
 const acDropdown=document.getElementById('ac-dropdown');
 let acItems=[],acActiveIdx=-1,acWordStart=0,acWordEnd=0;
-function safeColName(col){return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(col)?col:`\`${col}\``;}
+function safeColName(col){return/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(col)?col:`\`${col}\``;}
 function getCurrentToken(ta){const pos=ta.selectionStart,text=ta.value;let s=pos;while(s>0&&/[\w`]/.test(text[s-1]))s--;return{word:text.slice(s,pos),start:s,end:pos};}
-function contextSuggestions(ta){const before=ta.value.slice(0,ta.selectionStart).toUpperCase().trimEnd();if(/\b(FROM|JOIN)\s+$/.test(before))return[{text:'data',type:'table'}];if(/\bSELECT\s+$/.test(before))return[{text:'*',type:'keyword'},...columns.slice(0,6).map(c=>({text:safeColName(c),type:'column'}))];return[];}
+function contextSuggestions(ta){
+  const before=ta.value.slice(0,ta.selectionStart).toUpperCase().trimEnd();
+  const tables=currentFileType==='ehr'?['data','ehr_paths']:['data'];
+  if(/\b(FROM|JOIN)\s+$/.test(before))return tables.map(t=>({text:t,type:'table'}));
+  if(/\bSELECT\s+$/.test(before))return[{text:'*',type:'keyword'},...columns.slice(0,6).map(c=>({text:safeColName(c),type:'column'}))];
+  return[];
+}
 function buildSuggestions(word,ta){
   if(!word)return contextSuggestions(ta);
   const q=word.toLowerCase().replace(/^`/,'');const results=[];const seen=new Set();
   const push=item=>{if(!seen.has(item.text)){seen.add(item.text);results.push(item);}};
   columns.forEach(col=>{if(col.toLowerCase().startsWith(q))push({text:safeColName(col),type:'column'});});
-  if('data'.startsWith(q))push({text:'data',type:'table'});
+  const tables=currentFileType==='ehr'?['data','ehr_paths']:['data'];
+  tables.forEach(t=>{if(t.startsWith(q))push({text:t,type:'table'});});
   SQL_FN.forEach(fn=>{if(fn.toLowerCase().startsWith(q))push({text:fn,type:'func'});});
   SQL_KW.forEach(kw=>{if(kw.toLowerCase().startsWith(q))push({text:kw,type:'keyword'});});
   return results.slice(0,12);
@@ -959,7 +1566,7 @@ async function runQuery(){
       const res=await duckConn.query(sql);
       if(!res?.schema){queryStatus.textContent='✓ Query executed';queryStatus.classList.add('visible');return;}
       resultCols=res.schema.fields.map(f=>f.name);resultRows=arrowToRows(res,resultCols);
-    } else {
+    }else{
       if(!window.alasql){showQErr('AlaSQL not loaded.');return;}
       const results=alasql(sql);
       if(!Array.isArray(results)){queryStatus.textContent=`✓ Result: ${JSON.stringify(results)}`;queryStatus.classList.add('visible');return;}
@@ -1002,9 +1609,136 @@ function buildAlaSQLTable(){
 function finalizeViewer(){
   queryPanel.classList.remove('open');querySql.value='';queryError.classList.remove('visible');queryStatus.classList.remove('visible');queryModeBadge.classList.remove('visible');document.body.classList.remove('query-mode');
   updateShowing();buildColPanel();buildColChips();buildHeader();setupVirtualScroll();showViewer();
+  document.getElementById('mem-stat').style.display = 'inline-flex';
+  startMemoryMonitor();
 }
 function updateShowing(){let n;if(queryMode&&queryResultRows)n=queryResultRows.length;else if(duckMode)n=duckTotal;else n=filteredRows.length;document.getElementById('s-showing').textContent=n.toLocaleString();}
 function fmtBytes(b){if(b<1024)return b+' B';if(b<1024**2)return(b/1024).toFixed(1)+' KB';if(b<1024**3)return(b/1024**2).toFixed(1)+' MB';return(b/1024**3).toFixed(2)+' GB';}
+
+/* ═══════════════════════════════════════════════════════════
+   EHR STATS + FILTER PANEL
+═══════════════════════════════════════════════════════════ */
+async function showEHRStats() {
+  const r = (await duckConn.query(`
+    SELECT COUNT(*)                AS total,
+           COUNT(DISTINCT provider) AS prov,
+           COUNT(DISTINCT hospital) AS hosp,
+           COUNT(DISTINCT resource) AS res,
+           MIN(date)               AS d_min,
+           MAX(date)               AS d_max
+    FROM ehr_paths
+  `)).toArray()[0];
+  document.getElementById('ehr-s-total').textContent     = Number(r.total).toLocaleString();
+  document.getElementById('ehr-s-filtered').textContent  = Number(r.total).toLocaleString();
+  document.getElementById('ehr-s-providers').textContent = Number(r.prov).toLocaleString();
+  document.getElementById('ehr-s-hospitals').textContent = Number(r.hosp).toLocaleString();
+  document.getElementById('ehr-s-resources').textContent = Number(r.res).toLocaleString();
+  document.getElementById('ehr-s-daterange').textContent = `${r.d_min} – ${r.d_max}`;
+  document.getElementById('ehr-stats-section').classList.add('visible');
+  document.getElementById('ehr-filter-section').classList.add('visible');
+}
+
+async function loadEHRFilterOptions() {
+  const populate = async (selId, col) => {
+    const rows = (await duckConn.query(
+      `SELECT DISTINCT ${col} FROM ehr_paths WHERE ${col} IS NOT NULL ORDER BY ${col}`
+    )).toArray();
+    const sel = document.getElementById(selId);
+    sel.innerHTML = `<option value="">All</option>`;
+    rows.forEach(row => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = row[col];
+      sel.appendChild(opt);
+    });
+  };
+  await populate('ehr-f-provider', 'provider');
+  await populate('ehr-f-hospital', 'hospital');
+  await populate('ehr-f-resource', 'resource');
+}
+
+function buildEHRWhere() {
+  const parts = [];
+  const dateFrom = document.getElementById('ehr-f-date-from').value;
+  const dateTo   = document.getElementById('ehr-f-date-to').value;
+  const provider = document.getElementById('ehr-f-provider').value;
+  const hospital = document.getElementById('ehr-f-hospital').value;
+  const resource = document.getElementById('ehr-f-resource').value;
+  const userId   = document.getElementById('ehr-f-userid').value.trim();
+  if (dateFrom) parts.push(`date >= '${sqlEsc(dateFrom)}'`);
+  if (dateTo)   parts.push(`date <= '${sqlEsc(dateTo)}'`);
+  if (provider) parts.push(`provider = '${sqlEsc(provider)}'`);
+  if (hospital) parts.push(`hospital = '${sqlEsc(hospital)}'`);
+  if (resource) parts.push(`resource = '${sqlEsc(resource)}'`);
+  if (userId)   parts.push(`user_id LIKE '%${sqlEsc(userId)}%'`);
+  return parts.join(' AND ');
+}
+
+async function applyEHRFilters() {
+  const where = buildEHRWhere();
+  duckFilter = where;
+  duckCache.clear(); duckFetching.clear();
+  const sql = where ? `SELECT COUNT(*)::BIGINT AS n FROM ehr_paths WHERE ${where}`
+                    : `SELECT COUNT(*)::BIGINT AS n FROM ehr_paths`;
+  const cr = await duckConn.query(sql);
+  duckTotal = Number(cr.toArray()[0].n);
+  document.getElementById('ehr-s-filtered').textContent = duckTotal.toLocaleString();
+  document.getElementById('s-showing').textContent = duckTotal.toLocaleString();
+  setupVirtualScroll();
+}
+
+// Wire up EHR filter inputs
+let ehrFilterTimer;
+function onEHRFilterChange() {
+  clearTimeout(ehrFilterTimer);
+  ehrFilterTimer = setTimeout(applyEHRFilters, 350);
+}
+['ehr-f-date-from','ehr-f-date-to','ehr-f-userid'].forEach(id => {
+  document.getElementById(id).addEventListener('input', onEHRFilterChange);
+});
+['ehr-f-provider','ehr-f-hospital','ehr-f-resource'].forEach(id => {
+  document.getElementById(id).addEventListener('change', applyEHRFilters);
+});
+/* ── Memory monitor ── */
+let memInterval = null;
+function updateMemory() {
+  const mem     = performance.memory;
+  const usedEl  = document.getElementById('mem-used');
+  const pctEl   = document.getElementById('mem-pct');
+  const bar     = document.getElementById('mem-bar');
+  const limitEl = document.getElementById('mem-limit');
+  if (!usedEl) return;   // element not yet in DOM
+  if (!mem) {
+    usedEl.textContent = 'N/A';
+    if (pctEl)   pctEl.textContent   = '';
+    if (limitEl) limitEl.textContent = 'unavailable';
+    return;
+  }
+  const used  = mem.usedJSHeapSize;
+  const limit = mem.jsHeapSizeLimit;
+  const pct   = Math.round((used / limit) * 100);
+  usedEl.textContent = fmtBytes(used);
+  if (pctEl)   pctEl.textContent   = `(${pct}%)`;
+  if (limitEl) limitEl.textContent = fmtBytes(limit);
+  if (bar) {
+    bar.style.width      = pct + '%';
+    bar.style.background = pct > 80 ? '#ff7b72' : pct > 55 ? '#e3b341' : '#58a6ff';
+  }
+}
+function startMemoryMonitor() {
+  if (memInterval) clearInterval(memInterval);
+  updateMemory();
+  memInterval = setInterval(updateMemory, 2000);
+}
+
+document.getElementById('ehr-reset-btn').addEventListener('click', () => {
+  ['ehr-f-date-from','ehr-f-date-to','ehr-f-userid'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  ['ehr-f-provider','ehr-f-hospital','ehr-f-resource'].forEach(id => {
+    document.getElementById(id).selectedIndex = 0;
+  });
+  applyEHRFilters();
+});
 </script>
 </body>
 </html>
