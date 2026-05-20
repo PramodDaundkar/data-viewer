@@ -43,6 +43,7 @@
     .tile-name { font-size: 14px; font-weight: 600; color: #e6edf3; margin-bottom: 5px; }
     .tile-desc { font-size: 12px; color: #8b949e; line-height: 1.5; margin-bottom: 12px; }
     .tile-fmts { display: flex; gap: 5px; flex-wrap: wrap; }
+
     .tfmt { font-size: 10px; padding: 2px 7px; border-radius: 5px; font-family: monospace; font-weight: 600; }
     .tfmt.csv     { background: rgba(63,185,80,.1);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
     .tfmt.parquet { background: rgba(88,166,255,.1); color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
@@ -433,6 +434,7 @@
     <button class="btn primary" id="browse-btn">Choose File</button>
     <p class="dz-hint">All processing is local — no data leaves your browser</p>
     <input type="file" id="file-input" accept=".parquet,.parq,.csv,.tsv,.txt">
+    <p class="dz-hint" style="margin-top:-4px;">or copy a file and <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">⌘V</kbd> / <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">Ctrl+V</kbd> to paste</p>
   </div>
 
   <!-- EHR drop zone (hidden until EHR tile selected) -->
@@ -460,6 +462,7 @@
       <span class="ehr-field-chip">Resource</span>
     </div>
     <input type="file" id="ehr-file-input" accept=".csv,.txt,.log,.parquet,.parq">
+    <p class="dz-hint" style="margin-top:-4px;">or copy a file and <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">⌘V</kbd> / <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">Ctrl+V</kbd> to paste</p>
   </div>
 
 </div>
@@ -618,6 +621,9 @@
       </svg>
       CSV Options
     </button>
+    <button class="btn" id="export-table-btn">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV
+    </button>
     <button class="btn" id="load-new-btn" style="margin-left:auto">
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <polyline points="23 4 23 10 17 10"/>
@@ -654,6 +660,12 @@
       <div class="query-btn-col">
         <button class="btn primary" id="run-query-btn">
           <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Run
+        </button>
+        <button class="btn" id="query-export-btn" disabled>
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV
+        </button>
+        <button class="btn" id="query-copy-btn" disabled>
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy
         </button>
         <button class="btn" id="close-query-btn">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -786,6 +798,18 @@ ehrDropZone.addEventListener('dragleave',()=>ehrDropZone.classList.remove('drag-
 ehrDropZone.addEventListener('drop',e=>{ e.preventDefault(); ehrDropZone.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f)loadEHRFile(f); });
 
 document.getElementById('load-new-btn').addEventListener('click',()=>{ resetState(); showUpload(); });
+
+// ── Paste file from clipboard (Cmd+C on file in Finder/Explorer → Cmd+V here) ──
+document.addEventListener('paste', e => {
+  // Only act when the upload screen is visible
+  if (uploadSection.style.display === 'none') return;
+  const files = e.clipboardData?.files;
+  if (!files || files.length === 0) return;
+  e.preventDefault();
+  const file = files[0];
+  if (selectedMode === 'ehr') loadEHRFile(file).catch(err => showError(err.message));
+  else                        loadFile(file).catch(err => showError(err.message));
+});
 
 function resetState() {
   allRows=[]; filteredRows=[]; columns=[]; colVisible={}; colWidths={}; colFilters={}; rowObjects=[];
@@ -1576,13 +1600,15 @@ async function runQuery(){
     queryResultCols=resultCols;queryResultRows=resultRows;queryMode=true;sortCol=null;
     document.body.classList.add('query-mode');queryModeBadge.classList.add('visible');
     queryStatus.textContent=`✓ ${resultRows.length.toLocaleString()} row${resultRows.length!==1?'s':''} returned`;queryStatus.classList.add('visible');
+    document.getElementById('query-export-btn').disabled = resultRows.length === 0;
+    document.getElementById('query-copy-btn').disabled   = resultRows.length === 0;
     document.getElementById('s-showing').textContent=resultRows.length.toLocaleString();
     buildHeader();setupVirtualScroll();
   }catch(err){showQErr(err.message);}
 }
 
 function showQErr(m){queryError.textContent='⚠ '+m;queryError.classList.add('visible');}
-function clearQuery(){queryMode=false;queryResultCols=null;queryResultRows=null;document.body.classList.remove('query-mode');queryModeBadge.classList.remove('visible');queryError.classList.remove('visible');queryStatus.classList.remove('visible');updateShowing();buildHeader();setupVirtualScroll();}
+function clearQuery(){queryMode=false;queryResultCols=null;queryResultRows=null;document.body.classList.remove('query-mode');queryModeBadge.classList.remove('visible');queryError.classList.remove('visible');queryStatus.classList.remove('visible');document.getElementById('query-export-btn').disabled=true;document.getElementById('query-copy-btn').disabled=true;updateShowing();buildHeader();setupVirtualScroll();}
 
 document.getElementById('sql-btn').addEventListener('click',()=>{queryPanel.classList.toggle('open');if(queryPanel.classList.contains('open'))querySql.focus();});
 document.getElementById('run-query-btn').addEventListener('click',runQuery);
@@ -1613,6 +1639,87 @@ function finalizeViewer(){
   startMemoryMonitor();
 }
 function updateShowing(){let n;if(queryMode&&queryResultRows)n=queryResultRows.length;else if(duckMode)n=duckTotal;else n=filteredRows.length;document.getElementById('s-showing').textContent=n.toLocaleString();}
+/* ═══════════════════════════════════════════════════════════
+   EXPORT & COPY
+═══════════════════════════════════════════════════════════ */
+function escapeCSVCell(v) {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  return (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r'))
+    ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function downloadCSV(cols, rows, filename) {
+  const lines = [cols.map(escapeCSVCell).join(',')];
+  for (const row of rows) {
+    lines.push(row.map(escapeCSVCell).join(','));
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Main table export (filtered/sorted, all modes) ──
+async function exportTableCSV() {
+  const btn = document.getElementById('export-table-btn');
+  btn.disabled = true; btn.textContent = 'Exporting…';
+  try {
+    let cols, rows;
+    if (queryMode && queryResultCols) {
+      cols = queryResultCols; rows = queryResultRows;
+    } else if (duckMode) {
+      const where = duckFilter  ? `WHERE ${duckFilter}`   : '';
+      const order = duckOrderBy ? `ORDER BY ${duckOrderBy}` : '';
+      const res   = await duckConn.query(`SELECT * FROM data ${where} ${order}`);
+      cols  = res.schema.fields.map(f => f.name);
+      rows  = arrowToRows(res, cols);
+    } else {
+      const vis = visibleCols();
+      const idx = vis.map(c => columns.indexOf(c));
+      cols = vis;
+      rows = filteredRows.map(r => idx.map(i => r[i]));
+    }
+    const fname = (currentFile?.name?.replace(/\.[^.]+$/, '') || 'export') + '_filtered.csv';
+    downloadCSV(cols, rows, fname);
+  } catch(e) { alert('Export failed: ' + e.message); }
+  finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV';
+  }
+}
+
+// ── SQL results export ──
+function exportQueryCSV() {
+  if (!queryResultCols?.length) return;
+  downloadCSV(queryResultCols, queryResultRows, 'query_result.csv');
+}
+
+// ── SQL results copy to clipboard (tab-separated, paste into Excel/Sheets) ──
+async function copyQueryData() {
+  if (!queryResultCols?.length) return;
+  const btn  = document.getElementById('query-copy-btn');
+  const MAX  = 50_000;
+  const rows = queryResultRows.slice(0, MAX);
+  const lines = [queryResultCols.join('\t')];
+  for (const row of rows) {
+    lines.push(row.map(v => v === null || v === undefined ? '' : String(v)).join('\t'));
+  }
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    const orig = btn.innerHTML;
+    btn.textContent = `✓ Copied ${rows.length.toLocaleString()} rows`;
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  } catch(e) {
+    alert('Copy failed — try Export CSV instead.');
+  }
+}
+
+document.getElementById('export-table-btn').addEventListener('click', exportTableCSV);
+document.getElementById('query-export-btn').addEventListener('click', exportQueryCSV);
+document.getElementById('query-copy-btn').addEventListener('click', copyQueryData);
+
 function fmtBytes(b){if(b<1024)return b+' B';if(b<1024**2)return(b/1024).toFixed(1)+' KB';if(b<1024**3)return(b/1024**2).toFixed(1)+' MB';return(b/1024**3).toFixed(2)+' GB';}
 
 /* ═══════════════════════════════════════════════════════════
