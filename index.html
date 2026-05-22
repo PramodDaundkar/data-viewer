@@ -47,10 +47,47 @@
     .tfmt { font-size: 10px; padding: 2px 7px; border-radius: 5px; font-family: monospace; font-weight: 600; }
     .tfmt.csv     { background: rgba(63,185,80,.1);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
     .tfmt.parquet { background: rgba(88,166,255,.1); color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
-    .tfmt.ehr     { background: rgba(227,179,65,.1); color: #e3b341; border: 1px solid rgba(227,179,65,.3); }
+    .tfmt.ehr      { background: rgba(227,179,65,.1); color: #e3b341; border: 1px solid rgba(227,179,65,.3); }
+    .tfmt.wearable { background: rgba(86,211,164,.1); color: #56d3a4; border: 1px solid rgba(86,211,164,.3); }
+
+    /* Wearable tile hover overrides */
+    #tile-wearable:hover  { border-color: #56d3a4; background: rgba(86,211,164,.04); }
+    #tile-wearable.active { border-color: #56d3a4; background: rgba(86,211,164,.07); }
+
+    /* ── Usage counter badge on tiles ── */
+    .tile-usage {
+      margin-top: 10px; padding-top: 8px; border-top: 1px solid #21262d;
+      font-size: 11px; color: #484f58; display: flex; align-items: center; gap: 5px;
+    }
+    .tile-usage svg { opacity: .5; flex-shrink: 0; }
+    .uc-num { font-weight: 700; font-size: 13px; color: #58a6ff; }
+    .uc-num.ehr      { color: #e3b341; }
+    .uc-num.wearable { color: #56d3a4; }
+
+    /* ── Usage stats popup ── */
+    #usage-popup {
+      display: none; position: fixed; top: 44px; right: 12px; z-index: 9999;
+      background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+      padding: 16px 18px; width: 320px; box-shadow: 0 8px 28px rgba(0,0,0,.6);
+    }
+    #usage-popup.open { display: block; }
+    #usage-popup h3 { font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; }
+    .up-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #21262d; }
+    .up-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .up-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .up-icon.data     { background: rgba(88,166,255,.1);  color: #58a6ff; }
+    .up-icon.ehr      { background: rgba(227,179,65,.1);  color: #e3b341; }
+    .up-icon.wearable { background: rgba(86,211,164,.1);  color: #56d3a4; }
+    .up-label { flex: 1; font-size: 12px; color: #c9d1d9; }
+    .up-label small { display: block; font-size: 10px; color: #8b949e; margin-top: 1px; }
+    .up-val { font-size: 13px; font-weight: 700; color: #e6edf3; text-align: right; }
+    .up-val small { display: block; font-size: 10px; color: #8b949e; font-weight: 400; text-align: right; }
+    .up-divider { height: 1px; background: #30363d; margin: 8px 0; }
+    #up-reset-btn { margin-top: 10px; width: 100%; padding: 6px; font-size: 11px; background: transparent; border: 1px solid #30363d; border-radius: 5px; color: #8b949e; cursor: pointer; }
+    #up-reset-btn:hover { border-color: #ff7b72; color: #ff7b72; }
 
     /* ── Drop zones ── */
-    #drop-zone, #ehr-drop-zone {
+    #drop-zone, #ehr-drop-zone, #wearable-drop-zone {
       width: 100%; max-width: 560px; border: 2px dashed #30363d; border-radius: 14px;
       padding: 48px 32px; text-align: center; cursor: pointer;
       transition: border-color .2s, background .2s;
@@ -60,8 +97,13 @@
     #ehr-drop-zone:hover, #ehr-drop-zone.drag-over {
       border-color: #58a6ff; background: rgba(88,166,255,.04);
     }
-    #drop-zone .dz-title, #ehr-drop-zone .dz-title { font-size: 18px; font-weight: 600; color: #e6edf3; }
-    #drop-zone .dz-sub,   #ehr-drop-zone .dz-sub   { font-size: 13px; color: #8b949e; }
+    #wearable-drop-zone:hover, #wearable-drop-zone.drag-over {
+      border-color: #56d3a4; background: rgba(86,211,164,.04);
+    }
+    #drop-zone .dz-title, #ehr-drop-zone .dz-title,
+    #wearable-drop-zone .dz-title { font-size: 18px; font-weight: 600; color: #e6edf3; }
+    #drop-zone .dz-sub, #ehr-drop-zone .dz-sub,
+    #wearable-drop-zone .dz-sub { font-size: 13px; color: #8b949e; }
     .format-badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
     .format-badge {
       padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
@@ -69,9 +111,12 @@
     }
     .format-badge.parquet { background: rgba(88,166,255,.12); color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
     .format-badge.csv     { background: rgba(63,185,80,.12);  color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
-    .format-badge.ehr     { background: rgba(227,179,65,.12); color: #e3b341; border: 1px solid rgba(227,179,65,.3); }
-    #drop-zone .dz-hint, #ehr-drop-zone .dz-hint { font-size: 11px; color: #484f58; }
-    #file-input, #ehr-file-input { display: none; }
+    .format-badge.ehr      { background: rgba(227,179,65,.12); color: #e3b341; border: 1px solid rgba(227,179,65,.3); }
+    .format-badge.wearable { background: rgba(86,211,164,.12); color: #56d3a4; border: 1px solid rgba(86,211,164,.3); }
+    #filetype-badge.wearable { background: rgba(86,211,164,.12); color: #56d3a4; border: 1px solid rgba(86,211,164,.3); }
+    #drop-zone .dz-hint, #ehr-drop-zone .dz-hint,
+    #wearable-drop-zone .dz-hint { font-size: 11px; color: #484f58; }
+    #file-input, #ehr-file-input, #wear-file-input { display: none; }
 
     /* EHR extracted-fields preview */
     .ehr-fields-preview {
@@ -275,6 +320,43 @@
     body.query-mode .th { cursor: default; }
     body.query-mode .th:hover { background: transparent; color: #8b949e; }
 
+    /* ── Column value-filter icon ── */
+    .col-flt-btn {
+      flex-shrink: 0; background: none; border: none; cursor: pointer;
+      color: #484f58; padding: 0 2px; line-height: 1; transition: color .15s;
+      display: inline-flex; align-items: center;
+    }
+    .col-flt-btn:hover { color: #58a6ff; }
+    .col-flt-btn.active { color: #58a6ff; }
+
+    /* ── Value filter popup ── */
+    #vfp {
+      display: none; position: fixed; z-index: 99998;
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.7); width: 290px; overflow: hidden;
+    }
+    #vfp-header { padding: 9px 13px; font-size: 12px; font-weight: 600; color: #e6edf3; border-bottom: 1px solid #30363d; }
+    #vfp-search-wrap { padding: 7px 10px; border-bottom: 1px solid #21262d; }
+    #vfp-search {
+      width: 100%; background: #0d1117; border: 1px solid #30363d;
+      border-radius: 5px; color: #c9d1d9; padding: 5px 9px;
+      font-size: 12px; outline: none;
+    }
+    #vfp-search:focus { border-color: #58a6ff; }
+    #vfp-list { max-height: 220px; overflow-y: auto; }
+    .vfp-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 12px; cursor: pointer; font-size: 12px; color: #c9d1d9;
+      user-select: none;
+    }
+    .vfp-row:hover { background: #21262d; }
+    .vfp-row input { accent-color: #58a6ff; cursor: pointer; flex-shrink: 0; }
+    .vfp-row .vfp-val { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .vfp-row .vfp-cnt { color: #484f58; font-size: 11px; flex-shrink: 0; }
+    .vfp-divider { height: 1px; background: #21262d; margin: 2px 0; }
+    #vfp-footer { display: flex; gap: 6px; padding: 8px 10px; border-top: 1px solid #21262d; }
+    #vfp-footer button { flex: 1; font-size: 12px; padding: 5px; }
+
     /* ── EHR Stats ── */
     #ehr-stats-section {
       display: none; flex-shrink: 0;
@@ -322,7 +404,11 @@
       display: none; flex-shrink: 0;
       padding: 10px 16px; background: #0a0d13; border-bottom: 2px solid #30363d;
     }
-    #ehr-filter-section.visible { display: block; }
+    #ehr-filter-section.visible      { display: block; }
+    #wearable-stats-section          { display: none; flex-shrink: 0; padding: 10px 16px; background: #0a0d13; border-bottom: 1px solid #21262d; }
+    #wearable-stats-section.visible  { display: block; }
+    #wearable-filter-section         { display: none; flex-shrink: 0; padding: 10px 16px; background: #0a0d13; border-bottom: 2px solid #30363d; }
+    #wearable-filter-section.visible { display: block; }
     .ehr-filter-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;
       align-items: end;
@@ -364,6 +450,53 @@
   </svg>
   <h1>Data Viewer</h1>
   <span class="subtitle">— open &amp; explore your data files in the browser</span>
+  <button id="usage-btn" title="Usage stats" onclick="toggleUsagePopup()" style="margin-left:auto;display:flex;align-items:center;gap:6px;background:#21262d;border:1px solid #30363d;border-radius:7px;padding:5px 12px;color:#8b949e;font-size:12px;cursor:pointer;transition:all .15s;">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+      <line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+    Usage Stats
+  </button>
+</div>
+
+<!-- Usage stats popup -->
+<div id="usage-popup">
+  <h3>Feature Usage</h3>
+  <div class="up-row">
+    <div class="up-icon data">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+      </svg>
+    </div>
+    <div class="up-label">Data Viewer<small>CSV / Parquet files</small></div>
+    <div class="up-val"><span id="up-data-files">0</span> files<small id="up-data-sql">0 SQL queries</small></div>
+  </div>
+  <div class="up-row">
+    <div class="up-icon ehr">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+    </div>
+    <div class="up-label">EHR Path Log<small>File path analyzer</small></div>
+    <div class="up-val"><span id="up-ehr-files">0</span> files<small id="up-ehr-sql">0 SQL queries</small></div>
+  </div>
+  <div class="up-row">
+    <div class="up-icon wearable">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/>
+      </svg>
+    </div>
+    <div class="up-label">Wearable Path Log<small>Device log analyzer</small></div>
+    <div class="up-val"><span id="up-wear-files">0</span> files<small id="up-wear-sql">0 SQL queries</small></div>
+  </div>
+  <div class="up-divider"></div>
+  <div class="up-row" style="padding-top:4px">
+    <div style="flex:1;font-size:11px;color:#8b949e;">Total exports / downloads</div>
+    <div style="font-size:13px;font-weight:700;color:#e6edf3;"><span id="up-exports">0</span></div>
+  </div>
+  <button id="up-reset-btn" onclick="resetUsage()">↺ Reset all counters</button>
 </div>
 
 <!-- Upload -->
@@ -392,6 +525,10 @@
           <span class="tfmt csv">.tsv</span>
           <span class="tfmt csv">.txt</span>
         </div>
+        <div class="tile-usage">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="uc-num" id="uc-data">0</span>&nbsp;files loaded
+        </div>
       </div>
 
       <!-- EHR Path Log tile -->
@@ -411,6 +548,33 @@
           <span class="tfmt ehr">.csv</span>
           <span class="tfmt ehr">.txt</span>
           <span class="tfmt ehr">.log</span>
+        </div>
+        <div class="tile-usage">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="uc-num ehr" id="uc-ehr">0</span>&nbsp;files loaded
+        </div>
+      </div>
+
+      <!-- Wearable Path tile -->
+      <div class="tile" id="tile-wearable" onclick="switchTile('wearable')">
+        <div class="tile-icon" style="color:#56d3a4">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/>
+            <line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+          </svg>
+        </div>
+        <div class="tile-name">Wearable path log</div>
+        <div class="tile-desc">Parse wearable device logs — extracts Source, Payload, User ID, Start/End dates and FHIR ID</div>
+        <div class="tile-fmts">
+          <span class="tfmt wearable">.csv</span>
+          <span class="tfmt wearable">.txt</span>
+          <span class="tfmt wearable">.log</span>
+          <span class="tfmt parquet">.parquet</span>
+        </div>
+        <div class="tile-usage">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="uc-num wearable" id="uc-wearable">0</span>&nbsp;files loaded
         </div>
       </div>
 
@@ -462,6 +626,35 @@
       <span class="ehr-field-chip">Resource</span>
     </div>
     <input type="file" id="ehr-file-input" accept=".csv,.txt,.log,.parquet,.parq">
+    <p class="dz-hint" style="margin-top:-4px;">or copy a file and <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">⌘V</kbd> / <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">Ctrl+V</kbd> to paste</p>
+  </div>
+
+  <!-- Wearable drop zone (hidden until wearable tile selected) -->
+  <div id="wearable-drop-zone" style="display:none">
+    <svg width="48" height="48" fill="none" stroke="#56d3a4" stroke-width="1.5" viewBox="0 0 24 24" opacity=".85">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    <p class="dz-title">Drop your wearable path log file</p>
+    <div class="format-badges">
+      <span class="format-badge wearable">.csv</span>
+      <span class="format-badge wearable">.txt</span>
+      <span class="format-badge wearable">.log</span>
+      <span class="format-badge parquet">.parquet</span>
+    </div>
+    <button class="btn primary" id="wear-browse-btn" style="background:#1a4a3a;border-color:#56d3a4">Choose File</button>
+    <p class="dz-hint">Supports APPLE_HEALTHKIT · FITBIT · GARMIN and more · .link files ignored</p>
+    <div class="ehr-fields-preview" style="margin-top:4px;">
+      <span class="ehr-field-chip" style="background:rgba(86,211,164,.1);color:#56d3a4;border-color:rgba(86,211,164,.25)">Date</span>
+      <span class="ehr-field-chip" style="background:rgba(86,211,164,.1);color:#56d3a4;border-color:rgba(86,211,164,.25)">Time</span>
+      <span class="ehr-field-chip" style="background:rgba(86,211,164,.1);color:#56d3a4;border-color:rgba(86,211,164,.25)">Source</span>
+      <span class="ehr-field-chip" style="background:rgba(86,211,164,.1);color:#56d3a4;border-color:rgba(86,211,164,.25)">Payload</span>
+      <span class="ehr-field-chip" style="background:rgba(86,211,164,.1);color:#56d3a4;border-color:rgba(86,211,164,.25)">User ID</span>
+      <span class="ehr-field-chip" style="background:rgba(86,211,164,.1);color:#56d3a4;border-color:rgba(86,211,164,.25)">Start Date</span>
+      <span class="ehr-field-chip" style="background:rgba(86,211,164,.1);color:#56d3a4;border-color:rgba(86,211,164,.25)">End Date</span>
+      <span class="ehr-field-chip" style="background:rgba(86,211,164,.1);color:#56d3a4;border-color:rgba(86,211,164,.25)">FHIR ID</span>
+    </div>
+    <input type="file" id="wear-file-input" accept=".csv,.txt,.log,.parquet,.parq">
     <p class="dz-hint" style="margin-top:-4px;">or copy a file and <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">⌘V</kbd> / <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">Ctrl+V</kbd> to paste</p>
   </div>
 
@@ -590,6 +783,33 @@
     </div>
   </div>
 
+  <!-- Wearable Stats (shown only in wearable mode) -->
+  <div id="wearable-stats-section">
+    <div class="ehr-stat-grid" style="grid-template-columns:repeat(6,1fr)">
+      <div class="ehr-stat-card"><div class="ehr-stat-label">Total Rows</div><div class="ehr-stat-value" id="ws-total">—</div></div>
+      <div class="ehr-stat-card"><div class="ehr-stat-label">Filtered Rows</div><div class="ehr-stat-value" id="ws-filtered">—</div></div>
+      <div class="ehr-stat-card"><div class="ehr-stat-label">Sources</div><div class="ehr-stat-value" id="ws-sources">—</div></div>
+      <div class="ehr-stat-card"><div class="ehr-stat-label">Payloads</div><div class="ehr-stat-value" id="ws-payloads">—</div></div>
+      <div class="ehr-stat-card"><div class="ehr-stat-label">Unique Users</div><div class="ehr-stat-value" id="ws-users">—</div></div>
+      <div class="ehr-stat-card"><div class="ehr-stat-label">Date Range</div><div class="ehr-stat-value sm" id="ws-daterange">—</div></div>
+    </div>
+  </div>
+
+  <!-- Wearable Filter panel (shown only in wearable mode) -->
+  <div id="wearable-filter-section">
+    <div class="ehr-filter-grid">
+      <div class="ehr-filter-group"><label>Date From</label><input type="date" id="wf-date-from"></div>
+      <div class="ehr-filter-group"><label>Date To</label><input type="date" id="wf-date-to"></div>
+      <div class="ehr-filter-group"><label>Source</label><select id="wf-source"><option value="">All Sources</option></select></div>
+      <div class="ehr-filter-group"><label>Payload</label><select id="wf-payload"><option value="">All Payloads</option></select></div>
+      <div class="ehr-filter-group"><label>User ID</label><input type="text" id="wf-userid" placeholder="e.g. 438"></div>
+      <div class="ehr-filter-group"><label>Start Date</label><input type="text" id="wf-start-date" placeholder="e.g. 2020-05-08"></div>
+      <div class="ehr-filter-group"><label>End Date</label><input type="text" id="wf-end-date" placeholder="e.g. 2020-05-08"></div>
+      <div class="ehr-filter-group"><label>FHIR ID</label><input type="text" id="wf-fhir-id" placeholder="partial match"></div>
+      <div class="ehr-filter-group"><label>&nbsp;</label><button id="wear-reset-btn" style="width:100%;padding:7px;font-size:12px;background:#21262d;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;cursor:pointer;">↺ Reset Filters</button></div>
+    </div>
+  </div>
+
   <div id="toolbar">
     <input id="search-box" type="text" placeholder="🔍  Search all columns…"/>
     <span id="search-info"></span>
@@ -692,6 +912,19 @@
   </div>
 </div>
 
+<!-- Value filter popup -->
+<div id="vfp">
+  <div id="vfp-header">Local Filter For '<span id="vfp-col-name"></span>'</div>
+  <div id="vfp-search-wrap">
+    <input id="vfp-search" type="text" placeholder="🔍  Search values…">
+  </div>
+  <div id="vfp-list"></div>
+  <div id="vfp-footer">
+    <button class="btn" id="vfp-clear-btn">Clear</button>
+    <button class="btn primary" id="vfp-apply-btn">Apply</button>
+  </div>
+</div>
+
 <script type="module">
 import { parquetRead, parquetMetadata, parquetMetadataAsync } from 'https://esm.sh/hyparquet@1';
 
@@ -699,7 +932,7 @@ import { parquetRead, parquetMetadata, parquetMetadataAsync } from 'https://esm.
    SHARED STATE
 ═══════════════════════════════════════════════════════════ */
 let allRows=[], filteredRows=[], columns=[];
-let colVisible={}, colWidths={}, colFilters={};
+let colVisible={}, colWidths={}, colFilters={}, colValueFilters={};
 let sortCol=null, sortDir='asc', searchQuery='';
 let queryMode=false, queryResultCols=null, queryResultRows=null;
 let rowObjects=[];
@@ -732,8 +965,10 @@ const errorSection=document.getElementById('error-section');
 const viewerSection=document.getElementById('viewer-section');
 const fileInput=document.getElementById('file-input');
 const ehrFileInput=document.getElementById('ehr-file-input');
+const wearFileInput=document.getElementById('wear-file-input');
 const dropZone=document.getElementById('drop-zone');
 const ehrDropZone=document.getElementById('ehr-drop-zone');
+const wearDropZone=document.getElementById('wearable-drop-zone');
 const tableWrap=document.getElementById('table-wrap');
 const headerGroup=document.getElementById('header-group');
 const tblHeader=document.getElementById('tbl-header');
@@ -757,11 +992,73 @@ const csvOptionsPanel=document.getElementById('csv-options-panel');
 ═══════════════════════════════════════════════════════════ */
 window.switchTile = function(mode) {
   selectedMode = mode;
-  document.getElementById('tile-data').classList.toggle('active', mode === 'data');
-  document.getElementById('tile-ehr').classList.toggle('active',  mode === 'ehr');
-  dropZone.style.display    = mode === 'data' ? 'flex' : 'none';
-  ehrDropZone.style.display = mode === 'ehr'  ? 'flex' : 'none';
+  ['data','ehr','wearable'].forEach(m =>
+    document.getElementById(`tile-${m}`).classList.toggle('active', m === mode)
+  );
+  dropZone.style.display     = mode === 'data'     ? 'flex' : 'none';
+  ehrDropZone.style.display  = mode === 'ehr'      ? 'flex' : 'none';
+  wearDropZone.style.display = mode === 'wearable' ? 'flex' : 'none';
 };
+
+/* ═══════════════════════════════════════════════════════════
+   USAGE COUNTERS  (localStorage, device-local, no server)
+   Schema: { data_files, ehr_files, wearable_files,
+             data_sql, ehr_sql, wearable_sql, exports }
+═══════════════════════════════════════════════════════════ */
+const USAGE_KEY = 'dv_usage_v1';
+function getUsage() {
+  try { return JSON.parse(localStorage.getItem(USAGE_KEY) || '{}'); } catch(e) { return {}; }
+}
+function saveUsage(u) {
+  try { localStorage.setItem(USAGE_KEY, JSON.stringify(u)); } catch(e) {}
+}
+function incUsage(key) {
+  const u = getUsage();
+  u[key] = (u[key] || 0) + 1;
+  saveUsage(u);
+  renderUsageBadges(u);
+}
+function renderUsageBadges(u) {
+  u = u || getUsage();
+  // Tile badges
+  const el = id => document.getElementById(id);
+  if(el('uc-data'))     el('uc-data').textContent     = u.data_files     || 0;
+  if(el('uc-ehr'))      el('uc-ehr').textContent      = u.ehr_files      || 0;
+  if(el('uc-wearable')) el('uc-wearable').textContent = u.wearable_files || 0;
+  // Popup details
+  if(el('up-data-files'))  el('up-data-files').textContent  = u.data_files     || 0;
+  if(el('up-ehr-files'))   el('up-ehr-files').textContent   = u.ehr_files      || 0;
+  if(el('up-wear-files'))  el('up-wear-files').textContent  = u.wearable_files || 0;
+  if(el('up-data-sql'))    el('up-data-sql').textContent    = (u.data_sql     || 0) + ' SQL queries';
+  if(el('up-ehr-sql'))     el('up-ehr-sql').textContent     = (u.ehr_sql      || 0) + ' SQL queries';
+  if(el('up-wear-sql'))    el('up-wear-sql').textContent    = (u.wearable_sql || 0) + ' SQL queries';
+  if(el('up-exports'))     el('up-exports').textContent     = u.exports       || 0;
+}
+window.toggleUsagePopup = function() {
+  const popup = document.getElementById('usage-popup');
+  const btn   = document.getElementById('usage-btn');
+  const open  = popup.classList.toggle('open');
+  btn.style.borderColor = open ? '#58a6ff' : '#30363d';
+  btn.style.color       = open ? '#58a6ff' : '#8b949e';
+  if(open) renderUsageBadges();
+};
+window.resetUsage = function() {
+  if(!confirm('Reset all usage counters?')) return;
+  saveUsage({});
+  renderUsageBadges({});
+};
+// Close popup when clicking outside
+document.addEventListener('click', e => {
+  const popup = document.getElementById('usage-popup');
+  const btn   = document.getElementById('usage-btn');
+  if(popup && popup.classList.contains('open') && !popup.contains(e.target) && e.target !== btn && !btn.contains(e.target)){
+    popup.classList.remove('open');
+    btn.style.borderColor = '#30363d';
+    btn.style.color       = '#8b949e';
+  }
+});
+// Render on load
+renderUsageBadges();
 
 /* ═══════════════════════════════════════════════════════════
    SECTION HELPERS
@@ -783,8 +1080,14 @@ function setProgress(pct,msg,detail) {
 ═══════════════════════════════════════════════════════════ */
 document.getElementById('browse-btn').addEventListener('click',()=>fileInput.click());
 document.getElementById('ehr-browse-btn').addEventListener('click',()=>ehrFileInput.click());
+document.getElementById('wear-browse-btn').addEventListener('click',()=>wearFileInput.click());
 dropZone.addEventListener('click',e=>{ if(e.target.tagName!=='BUTTON')fileInput.click(); });
 ehrDropZone.addEventListener('click',e=>{ if(e.target.tagName!=='BUTTON')ehrFileInput.click(); });
+wearDropZone.addEventListener('click',e=>{ if(e.target.tagName!=='BUTTON')wearFileInput.click(); });
+wearDropZone.addEventListener('dragover',e=>{ e.preventDefault(); wearDropZone.classList.add('drag-over'); });
+wearDropZone.addEventListener('dragleave',()=>wearDropZone.classList.remove('drag-over'));
+wearDropZone.addEventListener('drop',e=>{ e.preventDefault(); wearDropZone.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f)loadWearableFile(f).catch(err=>showError(err.message)); });
+wearFileInput.addEventListener('change',()=>wearFileInput.files[0]&&loadWearableFile(wearFileInput.files[0]).catch(err=>showError(err.message)));
 
 fileInput.addEventListener('change',()=>fileInput.files[0]&&loadFile(fileInput.files[0]));
 ehrFileInput.addEventListener('change',()=>ehrFileInput.files[0]&&loadEHRFile(ehrFileInput.files[0]));
@@ -807,12 +1110,13 @@ document.addEventListener('paste', e => {
   if (!files || files.length === 0) return;
   e.preventDefault();
   const file = files[0];
-  if (selectedMode === 'ehr') loadEHRFile(file).catch(err => showError(err.message));
-  else                        loadFile(file).catch(err => showError(err.message));
+  if      (selectedMode === 'ehr')      loadEHRFile(file).catch(err => showError(err.message));
+  else if (selectedMode === 'wearable') loadWearableFile(file).catch(err => showError(err.message));
+  else                                  loadFile(file).catch(err => showError(err.message));
 });
 
 function resetState() {
-  allRows=[]; filteredRows=[]; columns=[]; colVisible={}; colWidths={}; colFilters={}; rowObjects=[];
+  allRows=[]; filteredRows=[]; columns=[]; colVisible={}; colWidths={}; colFilters={}; colValueFilters={}; rowObjects=[];
   sortCol=null; searchQuery=''; queryMode=false; queryResultCols=null; queryResultRows=null;
   duckMode=false; duckTotal=0; duckFilter=''; duckOrderBy=''; duckCache.clear(); duckFetching.clear();
   currentFile=null; currentFileType=null;
@@ -825,6 +1129,10 @@ function resetState() {
   document.getElementById('csv-opt-btn').style.display='none';
   document.getElementById('ehr-stats-section').classList.remove('visible');
   document.getElementById('ehr-filter-section').classList.remove('visible');
+  document.getElementById('wearable-stats-section').classList.remove('visible');
+  document.getElementById('wearable-filter-section').classList.remove('visible');
+  ['wf-date-from','wf-date-to','wf-userid','wf-start-date','wf-end-date','wf-fhir-id'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['wf-source','wf-payload'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='<option value="">All</option>';});
   if (memInterval) { clearInterval(memInterval); memInterval = null; }
   document.getElementById('mem-stat').style.display = 'none';
   document.getElementById('mem-used').textContent = '—';
@@ -900,7 +1208,7 @@ async function loadEHRParquet(file) {
         regexp_extract(${qCol}, '^\\d{4}-\\d{2}-\\d{2}\\s+(\\d{2}:\\d{2}:\\d{2})', 1) AS time,
         regexp_extract(${qCol}, 'EHRSERVICE/([^/]+)/',         1)                  AS provider,
         regexp_extract(${qCol}, 'EHRSERVICE/[^/]+/([^/]+)/',   1)                  AS hospital,
-        regexp_extract(${qCol}, 'EHRSERVICE/[^/]+/[^/]+/([^/]+)/',      1)         AS user_id,
+        TRY_CAST(regexp_extract(${qCol}, 'EHRSERVICE/[^/]+/[^/]+/([^/]+)/',      1) AS INTEGER) AS user_id,
         regexp_extract(${qCol}, 'EHRSERVICE/[^/]+/[^/]+/[^/]+/([^/]+)/', 1)        AS resource
       FROM read_parquet('ehr_upload.parquet')
       WHERE ${qCol} LIKE '%EHRSERVICE%'
@@ -972,7 +1280,7 @@ async function loadEHRTextDuckDB(file) {
       regexp_extract(column0, '^\\d{4}-\\d{2}-\\d{2}\\s+(\\d{2}:\\d{2}:\\d{2})', 1)       AS time,
       regexp_extract(column0, 'EHRSERVICE/([^/]+)/',                              1)       AS provider,
       regexp_extract(column0, 'EHRSERVICE/[^/]+/([^/]+)/',                        1)       AS hospital,
-      regexp_extract(column0, 'EHRSERVICE/[^/]+/[^/]+/([^/]+)/',                  1)       AS user_id,
+      TRY_CAST(regexp_extract(column0, 'EHRSERVICE/[^/]+/[^/]+/([^/]+)/',          1) AS INTEGER) AS user_id,
       regexp_extract(column0, 'EHRSERVICE/[^/]+/[^/]+/[^/]+/([^/]+)/',            1)       AS resource
     FROM read_csv('ehr_text', sep=chr(1), header=false,
                   auto_detect=false, all_varchar=true, ignore_errors=true)
@@ -1026,7 +1334,7 @@ async function loadEHRFile(file) {
       await duckConn.query(`
         CREATE TABLE ehr_paths (
           date VARCHAR, time VARCHAR, provider VARCHAR,
-          hospital VARCHAR, user_id VARCHAR, resource VARCHAR
+          hospital VARCHAR, user_id INTEGER, resource VARCHAR
         )
       `);
       setProgress(15, 'Streaming file…', 'Parsing lines and extracting fields');
@@ -1053,7 +1361,7 @@ async function loadEHRFile(file) {
 
           if (batch.length >= EHR_BATCH) {
             const vals = batch.map(r =>
-              `('${sqlEsc(r[0])}','${sqlEsc(r[1])}','${sqlEsc(r[2])}','${sqlEsc(r[3])}','${sqlEsc(r[4])}','${sqlEsc(r[5])}')`
+              `('${sqlEsc(r[0])}','${sqlEsc(r[1])}','${sqlEsc(r[2])}','${sqlEsc(r[3])}',${parseInt(r[4])||'NULL'},'${sqlEsc(r[5])}')`
             ).join(',');
             await duckConn.query(`INSERT INTO ehr_paths VALUES ${vals}`);
             batch=[];
@@ -1072,7 +1380,7 @@ async function loadEHRFile(file) {
       }
       if (leftover.trim()) { const p=parseEHRLine(leftover.trim()); if(p){batch.push(p);totalParsed++;} }
       if (batch.length) {
-        const vals=batch.map(r=>`('${sqlEsc(r[0])}','${sqlEsc(r[1])}','${sqlEsc(r[2])}','${sqlEsc(r[3])}','${sqlEsc(r[4])}','${sqlEsc(r[5])}')`).join(',');
+        const vals=batch.map(r=>`('${sqlEsc(r[0])}','${sqlEsc(r[1])}','${sqlEsc(r[2])}','${sqlEsc(r[3])}',${parseInt(r[4])||'NULL'},'${sqlEsc(r[5])}')`).join(',');
         await duckConn.query(`INSERT INTO ehr_paths VALUES ${vals}`);
       }
     } // end fallback
@@ -1345,6 +1653,16 @@ async function updateDuckFilter(){
   const conds=[];
   if(searchQuery){const parts=columns.map(c=>`TRY_CAST("${c.replace(/"/g,'""')}" AS VARCHAR) ILIKE '%${searchQuery.replace(/'/g,"''")}%'`);if(parts.length)conds.push(`(${parts.join(' OR ')})`);}
   columns.forEach(c=>{const f=(colFilters[c]||'').trim();if(f)conds.push(`TRY_CAST("${c.replace(/"/g,'""')}" AS VARCHAR) ILIKE '%${f.replace(/'/g,"''")}%'`);});
+  // Value picker filters (IN conditions)
+  Object.entries(colValueFilters).forEach(([col,vals])=>{
+    if(!vals||vals.size===0) return;
+    const qc=`"${col.replace(/"/g,'""')}"`;
+    const inParts=[]; let hasNull=false;
+    vals.forEach(v=>{ if(v===null)hasNull=true; else inParts.push(`'${String(v).replace(/'/g,"''")}'`); });
+    let cond=inParts.length?`${qc} IN (${inParts.join(',')})` :'';
+    if(hasNull) cond=cond?`(${cond} OR ${qc} IS NULL)`:`${qc} IS NULL`;
+    if(cond) conds.push(cond);
+  });
   duckFilter=conds.join(' AND ');duckCache.clear();duckFetching.clear();
   const where=duckFilter?`WHERE ${duckFilter}`:'';
   const cr=await duckConn.query(`SELECT COUNT(*)::BIGINT AS n FROM data ${where}`);
@@ -1365,6 +1683,15 @@ function applyFilters(){
   if(searchQuery){const q=searchQuery;rows=rows.filter(row=>row.some(v=>v!==null&&v!==undefined&&String(v).toLowerCase().includes(q)));}
   const active=columns.map((c,i)=>({i,val:(colFilters[c]||'').trim().toLowerCase()})).filter(f=>f.val);
   if(active.length)rows=rows.filter(row=>active.every(({i,val})=>{const v=row[i];return v!==null&&v!==undefined&&String(v).toLowerCase().includes(val);}));
+  // Value picker filters (in-memory)
+  Object.entries(colValueFilters).forEach(([col,vals])=>{
+    if(!vals||vals.size===0) return;
+    const idx=columns.indexOf(col); if(idx===-1) return;
+    rows=rows.filter(row=>{
+      const v=row[idx]; const sv=(v===null||v===undefined)?null:String(v);
+      return vals.has(sv)||(vals.has(null)&&(v===null||v===undefined));
+    });
+  });
   filteredRows=sortedRows(rows);
   searchInfo.textContent=(searchQuery||active.length)?`${filteredRows.length.toLocaleString()} match${filteredRows.length!==1?'es':''}`:'';
   clearFiltersBtn.style.display=active.length?'inline-flex':'none';
@@ -1375,7 +1702,9 @@ let searchTimer;
 searchBox.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{searchQuery=searchBox.value.trim().toLowerCase();applyFilters();},250);});
 clearFiltersBtn.addEventListener('click',()=>{
   columns.forEach(c=>{colFilters[c]='';});
+  colValueFilters={};
   filterRow.querySelectorAll('.filter-input').forEach(inp=>{inp.value='';inp.classList.remove('has-value');const x=inp.parentElement.querySelector('.filter-clear-btn');if(x)x.classList.remove('visible');});
+  buildHeader(); // refresh filter icon badges
   applyFilters();
 });
 
@@ -1439,7 +1768,15 @@ function buildHeader(){
     const label=document.createElement('span');label.textContent=col;label.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none';th.appendChild(label);
     const handle=document.createElement('div');handle.className='resize-handle';handle.title='Drag to resize';
     handle.addEventListener('mousedown',e=>startResize(e,col,handle));th.appendChild(handle);
-    th.addEventListener('click',e=>{if(!e.target.classList.contains('resize-handle')&&!queryMode)sortBy(col);});
+    th.addEventListener('click',e=>{if(!e.target.classList.contains('resize-handle')&&!e.target.closest('.col-flt-btn')&&!queryMode)sortBy(col);});
+    if(!queryMode){
+      const fb=document.createElement('button');
+      fb.className='col-flt-btn'+(colValueFilters[col]&&colValueFilters[col].size?' active':'');
+      fb.title=`Filter ${col}`;
+      fb.innerHTML='<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>';
+      fb.addEventListener('click',e=>{e.stopPropagation();openValueFilter(e,col);});
+      th.insertBefore(fb, handle);
+    }
     tblHeader.appendChild(th);
   });
   applyColWidths();
@@ -1523,7 +1860,7 @@ function safeColName(col){return/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(col)?col:`\`${co
 function getCurrentToken(ta){const pos=ta.selectionStart,text=ta.value;let s=pos;while(s>0&&/[\w`]/.test(text[s-1]))s--;return{word:text.slice(s,pos),start:s,end:pos};}
 function contextSuggestions(ta){
   const before=ta.value.slice(0,ta.selectionStart).toUpperCase().trimEnd();
-  const tables=currentFileType==='ehr'?['data','ehr_paths']:['data'];
+  const tables=currentFileType==='ehr'?['data','ehr_paths']:currentFileType==='wearable'?['data','wearable_paths']:['data'];
   if(/\b(FROM|JOIN)\s+$/.test(before))return tables.map(t=>({text:t,type:'table'}));
   if(/\bSELECT\s+$/.test(before))return[{text:'*',type:'keyword'},...columns.slice(0,6).map(c=>({text:safeColName(c),type:'column'}))];
   return[];
@@ -1533,7 +1870,7 @@ function buildSuggestions(word,ta){
   const q=word.toLowerCase().replace(/^`/,'');const results=[];const seen=new Set();
   const push=item=>{if(!seen.has(item.text)){seen.add(item.text);results.push(item);}};
   columns.forEach(col=>{if(col.toLowerCase().startsWith(q))push({text:safeColName(col),type:'column'});});
-  const tables=currentFileType==='ehr'?['data','ehr_paths']:['data'];
+  const tables=currentFileType==='ehr'?['data','ehr_paths']:currentFileType==='wearable'?['data','wearable_paths']:['data'];
   tables.forEach(t=>{if(t.startsWith(q))push({text:t,type:'table'});});
   SQL_FN.forEach(fn=>{if(fn.toLowerCase().startsWith(q))push({text:fn,type:'func'});});
   SQL_KW.forEach(kw=>{if(kw.toLowerCase().startsWith(q))push({text:kw,type:'keyword'});});
@@ -1604,6 +1941,9 @@ async function runQuery(){
     document.getElementById('query-copy-btn').disabled   = resultRows.length === 0;
     document.getElementById('s-showing').textContent=resultRows.length.toLocaleString();
     buildHeader();setupVirtualScroll();
+    // Track SQL usage per mode
+    const sqlKey = selectedMode === 'ehr' ? 'ehr_sql' : selectedMode === 'wearable' ? 'wearable_sql' : 'data_sql';
+    incUsage(sqlKey);
   }catch(err){showQErr(err.message);}
 }
 
@@ -1627,7 +1967,7 @@ function onResizeEnd(){if(!resizeState)return;resizeState.handle.classList.remov
 /* ═══════════════════════════════════════════════════════════
    HELPERS
 ═══════════════════════════════════════════════════════════ */
-function initColState(){colVisible={};colWidths={};colFilters={};columns.forEach(c=>{colVisible[c]=true;colWidths[c]=COL_W;colFilters[c]='';});}
+function initColState(){colVisible={};colWidths={};colFilters={};colValueFilters={};columns.forEach(c=>{colVisible[c]=true;colWidths[c]=COL_W;colFilters[c]='';});}
 function buildAlaSQLTable(){
   rowObjects=allRows.map(row=>{const obj={};columns.forEach((c,i)=>{obj[c]=row[i];});return obj;});
   if(window.alasql){alasql('DROP TABLE IF EXISTS `data`');alasql('CREATE TABLE `data`');alasql.tables['data'].data=rowObjects;}
@@ -1637,8 +1977,391 @@ function finalizeViewer(){
   updateShowing();buildColPanel();buildColChips();buildHeader();setupVirtualScroll();showViewer();
   document.getElementById('mem-stat').style.display = 'inline-flex';
   startMemoryMonitor();
+  // Track usage per mode (wearable calls finalizeViewer too, so selectedMode is always set correctly)
+  const modeKey = selectedMode === 'ehr' ? 'ehr_files' : selectedMode === 'wearable' ? 'wearable_files' : 'data_files';
+  incUsage(modeKey);
 }
 function updateShowing(){let n;if(queryMode&&queryResultRows)n=queryResultRows.length;else if(duckMode)n=duckTotal;else n=filteredRows.length;document.getElementById('s-showing').textContent=n.toLocaleString();}
+/* ═══════════════════════════════════════════════════════════
+   VALUE FILTER POPUP (column facet filter)
+═══════════════════════════════════════════════════════════ */
+let vfpCol=null, vfpData=[];
+
+async function openValueFilter(e,col){
+  vfpCol=col;
+  const popup=document.getElementById('vfp');
+  document.getElementById('vfp-col-name').textContent=col;
+  document.getElementById('vfp-search').value='';
+  document.getElementById('vfp-list').innerHTML='<div class="vfp-row" style="color:#8b949e">Loading…</div>';
+
+  // Position
+  const rect=e.currentTarget.getBoundingClientRect();
+  popup.style.display='block';
+  const pw=290;
+  let left=rect.left, top=rect.bottom+4;
+  if(left+pw>window.innerWidth) left=window.innerWidth-pw-8;
+  if(top+320>window.innerHeight) top=rect.top-320-4;
+  popup.style.left=Math.max(4,left)+'px';
+  popup.style.top=Math.max(4,top)+'px';
+
+  // Load values + counts from DuckDB
+  try{
+    const qc=`"${col.replace(/"/g,'""')}"`;
+    const where=duckFilter?`WHERE ${duckFilter}`:'';
+    const res=await duckConn.query(
+      `SELECT ${qc} AS v, COUNT(*) AS cnt FROM data ${where} GROUP BY ${qc} ORDER BY cnt DESC LIMIT 300`
+    );
+    vfpData=res.toArray().map(r=>({
+      value:r.v===null?null:String(r.v),
+      count:Number(r.cnt)
+    }));
+    renderVFP('');
+  }catch(err){
+    document.getElementById('vfp-list').innerHTML=
+      `<div class="vfp-row" style="color:#ff7b72">${err.message}</div>`;
+  }
+}
+
+function renderVFP(search){
+  const sel=colValueFilters[vfpCol]||new Set();
+  const q=search.toLowerCase();
+  const rows=q?vfpData.filter(d=>(d.value||'').toLowerCase().includes(q)):vfpData;
+  const list=document.getElementById('vfp-list');
+  if(!rows.length){list.innerHTML='<div class="vfp-row" style="color:#8b949e">No values found</div>';return;}
+
+  const allChk=rows.every(d=>sel.has(d.value));
+  let html=`<div class="vfp-row" id="vfp-all-row">
+    <input type="checkbox" id="vfp-all" ${allChk?'checked':''} style="accent-color:#58a6ff;cursor:pointer;flex-shrink:0;">
+    <span class="vfp-val" style="font-style:italic;color:#8b949e">(Select All)</span>
+    <span class="vfp-cnt">${rows.reduce((s,d)=>s+d.count,0).toLocaleString()}</span>
+  </div><div class="vfp-divider"></div>`;
+
+  for(const d of rows){
+    const isNull=d.value===null;
+    const disp=isNull?'<em style="color:#484f58">NULL</em>':d.value;
+    const key=isNull?'__NULL__':d.value.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    html+=`<label class="vfp-row" data-key="${key}">
+      <input type="checkbox" class="vfp-cb" ${sel.has(d.value)?'checked':''} style="accent-color:#58a6ff;cursor:pointer;">
+      <span class="vfp-val" title="${isNull?'NULL':d.value}">${disp}</span>
+      <span class="vfp-cnt">${d.count.toLocaleString()}</span>
+    </label>`;
+  }
+  list.innerHTML=html;
+
+  document.getElementById('vfp-all')?.addEventListener('change',ev=>{
+    list.querySelectorAll('.vfp-cb').forEach(cb=>{cb.checked=ev.target.checked;});
+  });
+}
+
+function collectVFPSelection(){
+  const sel=new Set();
+  document.querySelectorAll('#vfp-list .vfp-cb').forEach(cb=>{
+    if(cb.checked){
+      const key=cb.closest('label')?.dataset.key;
+      if(key!==undefined) sel.add(key==='__NULL__'?null:key);
+    }
+  });
+  return sel;
+}
+
+function applyVFP(){
+  const sel=collectVFPSelection();
+  if(sel.size===0||sel.size>=vfpData.length) delete colValueFilters[vfpCol];
+  else colValueFilters[vfpCol]=sel;
+  document.getElementById('vfp').style.display='none';
+  buildHeader();
+  applyFilters();
+}
+
+document.getElementById('vfp-apply-btn').addEventListener('click',applyVFP);
+document.getElementById('vfp-clear-btn').addEventListener('click',()=>{
+  delete colValueFilters[vfpCol];
+  document.getElementById('vfp').style.display='none';
+  buildHeader(); applyFilters();
+});
+document.getElementById('vfp-search').addEventListener('input',e=>renderVFP(e.target.value));
+document.getElementById('vfp-search').addEventListener('keydown',e=>{
+  if(e.key==='Enter') applyVFP();
+  if(e.key==='Escape') document.getElementById('vfp').style.display='none';
+});
+document.addEventListener('click',e=>{
+  const popup=document.getElementById('vfp');
+  if(popup.style.display!=='none'&&!popup.contains(e.target)&&!e.target.closest('.col-flt-btn'))
+    popup.style.display='none';
+});
+
+/* ═══════════════════════════════════════════════════════════
+   WEARABLE PATH LOG ENGINE
+═══════════════════════════════════════════════════════════ */
+const WEAR_COLS    = ['date','time','source','payload','user_id','start_date','end_date','fhir_id'];
+const WEAR_CHUNK   = 32 * 1024 * 1024;
+const WEAR_BATCH   = 50_000;
+const WEAR_DUCK_LIMIT = 300 * 1024 * 1024;
+
+// JS-side line parser (streaming fallback)
+function parseWearLine(line) {
+  if (/\.link$/i.test(line.trim())) return null;
+  const hm = /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+[\d.]+\s+\S+\s+/.exec(line);
+  if (!hm) return null;
+  const pm = /raw\/health\/\S+/.exec(line);
+  if (!pm) return null;
+  const parts = pm[0].split('/');
+  if (parts.length < 11) return null;
+  const source  = parts[5];
+  const payload = source === 'FITBIT' ? parts[6] : parts[7];
+  const userId  = parts[9];
+  const fn      = parts[10].replace(/\.(json|JSON)$/, '');
+  const uIdx    = fn.indexOf('_');
+  if (uIdx === -1) return null;
+  const startDate = fn.slice(0, uIdx);
+  const rest      = fn.slice(uIdx + 1);
+  const fm        = /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|[a-f0-9]{32})$/i.exec(rest);
+  const fhirId    = fm ? fm[1] : '';
+  const endDate   = fm ? rest.slice(0, rest.length - fhirId.length - 1) : rest;
+  return [hm[1], hm[2], source, payload, userId, startDate, endDate, fhirId];
+}
+
+// ── DuckDB-native fast path (files ≤ 300 MB) ──
+async function loadWearTextDuckDB(file) {
+  const protocol = duckMod?.DuckDBDataProtocol?.BROWSER_FILEREADER ?? 2;
+  await duckDB.registerFileHandle('wear_text', file, protocol, true);
+  setProgress(40, 'DuckDB extracting wearable fields…', 'Vectorised scan');
+  await duckConn.query('DROP TABLE IF EXISTS wearable_paths');
+  await duckConn.query(`
+    CREATE TABLE wearable_paths AS
+    WITH raw AS (
+      SELECT
+        column0 AS line,
+        string_split(regexp_extract(column0, 'raw/health/\\S+', 0), '/') AS parts
+      FROM read_csv('wear_text', sep=chr(1), header=false,
+                    auto_detect=false, all_varchar=true, ignore_errors=true)
+      WHERE column0 LIKE '%raw/health/%'
+        AND lower(column0) NOT LIKE '%.link'
+    ),
+    parsed AS (
+      SELECT
+        regexp_extract(line, '^(\\d{4}-\\d{2}-\\d{2})', 1)                         AS date,
+        regexp_extract(line, '^\\d{4}-\\d{2}-\\d{2}\\s+(\\d{2}:\\d{2}:\\d{2})', 1) AS time,
+        parts[6]                                                                     AS source,
+        CASE parts[6] WHEN 'FITBIT' THEN parts[7] ELSE parts[8] END                 AS payload,
+        TRY_CAST(parts[10] AS INTEGER)                                               AS user_id,
+        regexp_replace(parts[11], '\\.(json|JSON)$', '')                            AS fn
+      FROM raw WHERE len(parts) >= 11
+    )
+    SELECT date, time, source, payload, user_id,
+      regexp_extract(fn, '^([^_]+)_', 1)                                                                           AS start_date,
+      regexp_extract(fn, '^[^_]+_(.+)-(?:[a-f0-9]{32}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$', 1) AS end_date,
+      regexp_extract(fn, '([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|[a-f0-9]{32})$', 1)     AS fhir_id
+    FROM parsed WHERE date != '' AND source IS NOT NULL
+  `);
+  setProgress(90, 'Counting rows…', '');
+  const cr = await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM wearable_paths');
+  return Number(cr.toArray()[0].n);
+}
+
+// ── Parquet path ──
+async function loadWearParquet(file) {
+  resetState(); currentFile=file; currentFileType='wearable'; showLoading();
+  setProgress(5,`Initializing DuckDB for ${file.name}…`,'');
+  try {
+    await ensureDuckDB();
+    const protocol = duckMod?.DuckDBDataProtocol?.BROWSER_FILEREADER ?? 2;
+    await duckDB.registerFileHandle('wear_upload.parquet', file, protocol, true);
+    setProgress(30,'Detecting log column…','');
+    const schemaRes  = await duckConn.query("DESCRIBE SELECT * FROM read_parquet('wear_upload.parquet')");
+    const allCols    = schemaRes.toArray().map(r=>r.column_name);
+    const sampleRows = (await duckConn.query("SELECT * FROM read_parquet('wear_upload.parquet') LIMIT 5")).toArray();
+    let logCol = allCols.find(c => sampleRows.some(r => String(r[c]||'').includes('raw/health/'))) || allCols[0];
+    const qCol = `"${logCol.replace(/"/g,'""')}"`;
+    setProgress(50,'Extracting wearable fields…',`Column: "${logCol}"`);
+    await duckConn.query('DROP TABLE IF EXISTS wearable_paths');
+    await duckConn.query(`
+      CREATE TABLE wearable_paths AS
+      WITH parsed AS (
+        SELECT
+          regexp_extract(${qCol}, '^(\\d{4}-\\d{2}-\\d{2})', 1)                         AS date,
+          regexp_extract(${qCol}, '^\\d{4}-\\d{2}-\\d{2}\\s+(\\d{2}:\\d{2}:\\d{2})', 1) AS time,
+          string_split(regexp_extract(${qCol}, 'raw/health/\\S+', 0), '/') AS parts,
+          regexp_replace(
+            string_split(regexp_extract(${qCol}, 'raw/health/\\S+', 0), '/')[11],
+            '\\.(json|JSON)$', ''
+          ) AS fn
+        FROM read_parquet('wear_upload.parquet')
+        WHERE ${qCol} LIKE '%raw/health/%' AND lower(${qCol}) NOT LIKE '%.link'
+      )
+      SELECT date, time,
+        parts[6] AS source,
+        CASE parts[6] WHEN 'FITBIT' THEN parts[7] ELSE parts[8] END AS payload,
+        TRY_CAST(parts[10] AS INTEGER) AS user_id,
+        regexp_extract(fn, '^([^_]+)_', 1) AS start_date,
+        regexp_extract(fn, '^[^_]+_(.+)-(?:[a-f0-9]{32}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$', 1) AS end_date,
+        regexp_extract(fn, '([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|[a-f0-9]{32})$', 1) AS fhir_id
+      FROM parsed WHERE date != '' AND len(parts) >= 11
+    `);
+    setProgress(90,'Counting rows…','');
+    const cr = await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM wearable_paths');
+    await finalizeWearable(file, Number(cr.toArray()[0].n));
+  } catch(err) { console.error(err); showError(`Could not parse wearable Parquet.\n\n${err.message}`); }
+}
+
+// ── Main entry point ──
+async function loadWearableFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext==='parquet'||ext==='parq') {
+    if (await isRealParquet(file)) { await loadWearParquet(file); return; }
+  }
+  resetState(); currentFile=file; currentFileType='wearable'; showLoading();
+  setProgress(5,`Initializing DuckDB for ${file.name}…`,'');
+  try {
+    await ensureDuckDB();
+    let totalParsed=0, fastOk=false;
+    if (file.size <= WEAR_DUCK_LIMIT) {
+      try {
+        setProgress(20,'Registering file with DuckDB…','Vectorised engine');
+        totalParsed = await loadWearTextDuckDB(file); fastOk=true;
+      } catch(e) { console.warn('DuckDB wearable parse failed, falling back:',e.message); }
+    } else {
+      setProgress(12,'Large file — using streaming…','Memory-efficient path');
+    }
+    if (!fastOk) {
+      // JS streaming fallback
+      await duckConn.query('DROP TABLE IF EXISTS wearable_paths');
+      await duckConn.query(`CREATE TABLE wearable_paths (
+        date VARCHAR, time VARCHAR, source VARCHAR, payload VARCHAR,
+        user_id INTEGER, start_date VARCHAR, end_date VARCHAR, fhir_id VARCHAR
+      )`);
+      setProgress(15,'Streaming file…','Parsing lines');
+      const fileSize=file.size; let batch=[], totalErrors=0;
+      let leftover='', bytesRead=0, t0=Date.now(), lastT=t0, lastRows=0;
+      for (let offset=0; offset<fileSize; offset+=WEAR_CHUNK) {
+        const buf  = await file.slice(offset,Math.min(offset+WEAR_CHUNK,fileSize)).arrayBuffer();
+        const text = new TextDecoder('utf-8',{fatal:false}).decode(buf);
+        bytesRead += buf.byteLength;
+        const full=leftover+text, lines=full.split('\n');
+        leftover=lines.pop()??'';
+        for (const raw of lines) {
+          const line=raw.trim(); if(!line) continue;
+          const p=parseWearLine(line);
+          if(p){batch.push(p);totalParsed++;}else{totalErrors++;}
+          if (batch.length>=WEAR_BATCH) {
+            const vals=batch.map(r=>`('${sqlEsc(r[0]||'')}','${sqlEsc(r[1]||'')}','${sqlEsc(r[2]||'')}','${sqlEsc(r[3]||'')}',${parseInt(r[4])||'NULL'},'${sqlEsc(r[5]||'')}','${sqlEsc(r[6]||'')}','${sqlEsc(r[7]||'')}')`).join(',');
+            await duckConn.query(`INSERT INTO wearable_paths VALUES ${vals}`);
+            batch=[];
+            const now=Date.now(), elapsed=(now-t0)/1000, dt=(now-lastT)/1000;
+            const speed=dt>0.1?Math.round((totalParsed-lastRows)/dt):0;
+            const etaSec=elapsed>0?Math.round((fileSize-bytesRead)/(fileSize/elapsed)):0;
+            const eFmt=elapsed<60?`${Math.floor(elapsed)}s`:`${Math.floor(elapsed/60)}m ${Math.floor(elapsed%60)}s`;
+            setProgress(15+(bytesRead/fileSize)*80,`Parsing… ${totalParsed.toLocaleString()} rows`,
+              `${speed?speed.toLocaleString()+'/s':'—'} · Elapsed: ${eFmt} · ETA: ${etaSec?Math.floor(etaSec/60)+'m '+Math.floor(etaSec%60)+'s':'—'} · Errors: ${totalErrors.toLocaleString()}`);
+            lastT=now; lastRows=totalParsed;
+            await new Promise(r=>setTimeout(r,0));
+          }
+        }
+      }
+      if (leftover.trim()){const p=parseWearLine(leftover.trim());if(p){batch.push(p);totalParsed++;}}
+      if (batch.length){
+        const vals=batch.map(r=>`('${sqlEsc(r[0]||'')}','${sqlEsc(r[1]||'')}','${sqlEsc(r[2]||'')}','${sqlEsc(r[3]||'')}',${parseInt(r[4])||'NULL'},'${sqlEsc(r[5]||'')}','${sqlEsc(r[6]||'')}','${sqlEsc(r[7]||'')}')`).join(',');
+        await duckConn.query(`INSERT INTO wearable_paths VALUES ${vals}`);
+      }
+    }
+    await finalizeWearable(file, totalParsed);
+  } catch(err) { console.error(err); showError(`Could not parse wearable file.\n\n${err.message}`); }
+}
+
+async function finalizeWearable(file, totalRows) {
+  setProgress(97,'Finalizing…','Creating query view');
+  await duckConn.query('CREATE OR REPLACE VIEW data AS SELECT * FROM wearable_paths');
+  columns=WEAR_COLS.slice(); duckMode=true; duckTotal=totalRows;
+  duckFilter=''; duckOrderBy=''; duckCache.clear(); duckFetching.clear();
+  initColState();
+  document.getElementById('filetype-badge').textContent = 'WEARABLE';
+  document.getElementById('filetype-badge').className   = 'wearable';
+  document.getElementById('s-file').textContent = file.name;
+  document.getElementById('s-size').textContent = fmtBytes(file.size);
+  document.getElementById('s-rows').textContent = totalRows.toLocaleString();
+  document.getElementById('s-cols').textContent = columns.length;
+  document.getElementById('duck-mode-badge').style.display='inline-flex';
+  querySql.placeholder='SELECT * FROM wearable_paths LIMIT 100\n\n-- Columns: date · time · source · payload · user_id · start_date · end_date · fhir_id\n-- Press Ctrl+Enter to run';
+  finalizeViewer();
+  filterRow.style.display='none';
+  await showWearableStats();
+  await loadWearableFilterOptions();
+}
+
+async function showWearableStats() {
+  const r=(await duckConn.query(`
+    SELECT COUNT(*) AS total, COUNT(DISTINCT source) AS srcs,
+           COUNT(DISTINCT payload) AS payloads, COUNT(DISTINCT user_id) AS users,
+           MIN(date) AS d_min, MAX(date) AS d_max
+    FROM wearable_paths
+  `)).toArray()[0];
+  document.getElementById('ws-total').textContent    = Number(r.total).toLocaleString();
+  document.getElementById('ws-filtered').textContent = Number(r.total).toLocaleString();
+  document.getElementById('ws-sources').textContent  = Number(r.srcs).toLocaleString();
+  document.getElementById('ws-payloads').textContent = Number(r.payloads).toLocaleString();
+  document.getElementById('ws-users').textContent    = Number(r.users).toLocaleString();
+  document.getElementById('ws-daterange').textContent= `${r.d_min} – ${r.d_max}`;
+  document.getElementById('wearable-stats-section').classList.add('visible');
+  document.getElementById('wearable-filter-section').classList.add('visible');
+}
+
+async function loadWearableFilterOptions() {
+  const populate = async (selId, col) => {
+    const rows=(await duckConn.query(`SELECT DISTINCT ${col} FROM wearable_paths WHERE ${col} IS NOT NULL ORDER BY ${col}`)).toArray();
+    const sel=document.getElementById(selId);
+    sel.innerHTML='<option value="">All</option>';
+    rows.forEach(row=>{const o=document.createElement('option');o.value=o.textContent=row[col];sel.appendChild(o);});
+  };
+  await populate('wf-source','source');
+  await populate('wf-payload','payload');
+}
+
+function buildWearWhere() {
+  const parts=[];
+  const df  = document.getElementById('wf-date-from').value;
+  const dt  = document.getElementById('wf-date-to').value;
+  const src = document.getElementById('wf-source').value;
+  const pay = document.getElementById('wf-payload').value;
+  const uid = document.getElementById('wf-userid').value.trim();
+  const sd  = document.getElementById('wf-start-date').value.trim();
+  const ed  = document.getElementById('wf-end-date').value.trim();
+  const fid = document.getElementById('wf-fhir-id').value.trim();
+  if(df)  parts.push(`date >= '${sqlEsc(df)}'`);
+  if(dt)  parts.push(`date <= '${sqlEsc(dt)}'`);
+  if(src) parts.push(`source = '${sqlEsc(src)}'`);
+  if(pay) parts.push(`payload = '${sqlEsc(pay)}'`);
+  if(uid) parts.push(`CAST(user_id AS VARCHAR) LIKE '%${sqlEsc(uid)}%'`);
+  if(sd)  parts.push(`start_date LIKE '%${sqlEsc(sd)}%'`);
+  if(ed)  parts.push(`end_date LIKE '%${sqlEsc(ed)}%'`);
+  if(fid) parts.push(`fhir_id LIKE '%${sqlEsc(fid)}%'`);
+  return parts.join(' AND ');
+}
+
+async function applyWearableFilters() {
+  const where=buildWearWhere();
+  duckFilter=where; duckCache.clear(); duckFetching.clear();
+  const cr=await duckConn.query(where
+    ?`SELECT COUNT(*)::BIGINT AS n FROM wearable_paths WHERE ${where}`
+    :`SELECT COUNT(*)::BIGINT AS n FROM wearable_paths`);
+  duckTotal=Number(cr.toArray()[0].n);
+  document.getElementById('ws-filtered').textContent=duckTotal.toLocaleString();
+  document.getElementById('s-showing').textContent=duckTotal.toLocaleString();
+  setupVirtualScroll();
+}
+
+let wearFilterTimer;
+['wf-date-from','wf-date-to','wf-userid','wf-start-date','wf-end-date','wf-fhir-id'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{clearTimeout(wearFilterTimer);wearFilterTimer=setTimeout(applyWearableFilters,350);});
+});
+['wf-source','wf-payload'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',applyWearableFilters);
+});
+document.getElementById('wear-reset-btn').addEventListener('click',()=>{
+  ['wf-date-from','wf-date-to','wf-userid','wf-start-date','wf-end-date','wf-fhir-id'].forEach(id=>{document.getElementById(id).value='';});
+  ['wf-source','wf-payload'].forEach(id=>{document.getElementById(id).selectedIndex=0;});
+  applyWearableFilters();
+});
+
 /* ═══════════════════════════════════════════════════════════
    EXPORT & COPY
 ═══════════════════════════════════════════════════════════ */
@@ -1683,6 +2406,7 @@ async function exportTableCSV() {
     }
     const fname = (currentFile?.name?.replace(/\.[^.]+$/, '') || 'export') + '_filtered.csv';
     downloadCSV(cols, rows, fname);
+    incUsage('exports');
   } catch(e) { alert('Export failed: ' + e.message); }
   finally {
     btn.disabled = false;
@@ -1694,6 +2418,7 @@ async function exportTableCSV() {
 function exportQueryCSV() {
   if (!queryResultCols?.length) return;
   downloadCSV(queryResultCols, queryResultRows, 'query_result.csv');
+  incUsage('exports');
 }
 
 // ── SQL results copy to clipboard (tab-separated, paste into Excel/Sheets) ──
@@ -1708,6 +2433,7 @@ async function copyQueryData() {
   }
   try {
     await navigator.clipboard.writeText(lines.join('\n'));
+    incUsage('exports');
     const orig = btn.innerHTML;
     btn.textContent = `✓ Copied ${rows.length.toLocaleString()} rows`;
     setTimeout(() => { btn.innerHTML = orig; }, 2000);
@@ -1776,7 +2502,7 @@ function buildEHRWhere() {
   if (provider) parts.push(`provider = '${sqlEsc(provider)}'`);
   if (hospital) parts.push(`hospital = '${sqlEsc(hospital)}'`);
   if (resource) parts.push(`resource = '${sqlEsc(resource)}'`);
-  if (userId)   parts.push(`user_id LIKE '%${sqlEsc(userId)}%'`);
+  if (userId)   parts.push(`CAST(user_id AS VARCHAR) LIKE '%${sqlEsc(userId)}%'`);
   return parts.join(' AND ');
 }
 
