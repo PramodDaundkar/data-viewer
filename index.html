@@ -54,6 +54,12 @@
     #tile-wearable:hover  { border-color: #56d3a4; background: rgba(86,211,164,.04); }
     #tile-wearable.active { border-color: #56d3a4; background: rgba(86,211,164,.07); }
 
+    /* JSON tile hover overrides */
+    #tile-json:hover  { border-color: #bc8cff; background: rgba(188,140,255,.04); }
+    #tile-json.active { border-color: #bc8cff; background: rgba(188,140,255,.07); }
+    .tfmt.json { background: rgba(188,140,255,.1); color: #bc8cff; border: 1px solid rgba(188,140,255,.3); }
+    .uc-num.json { color: #bc8cff; }
+
     /* ── Usage counter badge on tiles ── */
     .tile-usage {
       margin-top: 10px; padding-top: 8px; border-top: 1px solid #21262d;
@@ -87,7 +93,7 @@
     #up-reset-btn:hover { border-color: #ff7b72; color: #ff7b72; }
 
     /* ── Drop zones ── */
-    #drop-zone, #ehr-drop-zone, #wearable-drop-zone {
+    #drop-zone, #ehr-drop-zone, #wearable-drop-zone, #json-drop-zone {
       width: 100%; max-width: 560px; border: 2px dashed #30363d; border-radius: 14px;
       padding: 48px 32px; text-align: center; cursor: pointer;
       transition: border-color .2s, background .2s;
@@ -101,9 +107,9 @@
       border-color: #56d3a4; background: rgba(86,211,164,.04);
     }
     #drop-zone .dz-title, #ehr-drop-zone .dz-title,
-    #wearable-drop-zone .dz-title { font-size: 18px; font-weight: 600; color: #e6edf3; }
+    #wearable-drop-zone .dz-title, #json-drop-zone .dz-title { font-size: 18px; font-weight: 600; color: #e6edf3; }
     #drop-zone .dz-sub, #ehr-drop-zone .dz-sub,
-    #wearable-drop-zone .dz-sub { font-size: 13px; color: #8b949e; }
+    #wearable-drop-zone .dz-sub, #json-drop-zone .dz-sub { font-size: 13px; color: #8b949e; }
     .format-badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
     .format-badge {
       padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
@@ -114,9 +120,14 @@
     .format-badge.ehr      { background: rgba(227,179,65,.12); color: #e3b341; border: 1px solid rgba(227,179,65,.3); }
     .format-badge.wearable { background: rgba(86,211,164,.12); color: #56d3a4; border: 1px solid rgba(86,211,164,.3); }
     #filetype-badge.wearable { background: rgba(86,211,164,.12); color: #56d3a4; border: 1px solid rgba(86,211,164,.3); }
+    .format-badge.json { background: rgba(188,140,255,.12); color: #bc8cff; border: 1px solid rgba(188,140,255,.3); }
+    #filetype-badge.json { background: rgba(188,140,255,.12); color: #bc8cff; border: 1px solid rgba(188,140,255,.3); }
     #drop-zone .dz-hint, #ehr-drop-zone .dz-hint,
-    #wearable-drop-zone .dz-hint { font-size: 11px; color: #484f58; }
-    #file-input, #ehr-file-input, #wear-file-input { display: none; }
+    #wearable-drop-zone .dz-hint, #json-drop-zone .dz-hint { font-size: 11px; color: #484f58; }
+    #json-drop-zone:hover, #json-drop-zone.drag-over {
+      border-color: #bc8cff; background: rgba(188,140,255,.04);
+    }
+    #file-input, #ehr-file-input, #wear-file-input, #json-file-input { display: none; }
 
     /* EHR extracted-fields preview */
     .ehr-fields-preview {
@@ -433,6 +444,36 @@
       transition: background .15s;
     }
     #ehr-reset-btn:hover { background: #30363d; }
+
+    /* ── JSON Schema Panel ── */
+    #json-schema-panel {
+      flex-shrink: 0; display: none; flex-direction: column;
+      background: #080b10; border-bottom: 2px solid #3d1f6e;
+    }
+    #json-schema-panel.visible { display: flex; }
+    .schema-hdr {
+      display: flex; align-items: center; gap: 8px; padding: 6px 14px;
+      background: #161b22; border-bottom: 1px solid #21262d; cursor: pointer;
+      font-size: 11px; color: #8b949e; user-select: none;
+    }
+    .schema-hdr:hover { background: #1c2128; }
+    .schema-hdr .schema-title { font-weight: 600; color: #c9d1d9; }
+    .schema-body { display: none; padding: 8px 14px; max-height: 160px; overflow-y: auto; }
+    .schema-body.open { display: block; }
+    .schema-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; font-size: 11px; font-family: monospace; border-bottom: 1px solid #0d1117; }
+    .schema-col-name { color: #c9d1d9; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .schema-col-type { padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; flex-shrink: 0; }
+    .sct-struct  { background: rgba(188,140,255,.12); color: #bc8cff; border: 1px solid rgba(188,140,255,.3); }
+    .sct-list    { background: rgba(86,211,164,.12);  color: #56d3a4; border: 1px solid rgba(86,211,164,.3); }
+    .sct-str     { background: rgba(63,185,80,.12);   color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+    .sct-num     { background: rgba(88,166,255,.12);  color: #58a6ff; border: 1px solid rgba(88,166,255,.3); }
+    .sct-other   { background: rgba(139,148,158,.1);  color: #8b949e; border: 1px solid rgba(139,148,158,.3); }
+    .schema-nested { color: #484f58; font-size: 10px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .flatten-toggle { margin-left: auto; display: flex; align-items: center; gap: 5px; }
+    .flatten-toggle span { font-size: 10px; color: #484f58; }
+    .fl-btn { padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: 600; background: #21262d; border: 1px solid #30363d; color: #8b949e; cursor: pointer; transition: all .12s; }
+    .fl-btn.active { background: rgba(188,140,255,.15); border-color: #bc8cff; color: #bc8cff; }
+    .fl-btn:hover { border-color: #8b949e; }
   </style>
   <style id="col-widths-style"></style>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5/papaparse.min.js"></script>
@@ -490,6 +531,16 @@
     </div>
     <div class="up-label">Wearable Path Log<small>Device log analyzer</small></div>
     <div class="up-val"><span id="up-wear-files">0</span> files<small id="up-wear-sql">0 SQL queries</small></div>
+  </div>
+  <div class="up-row">
+    <div class="up-icon" style="background:rgba(188,140,255,.1);color:#bc8cff">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/>
+        <path d="M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>
+      </svg>
+    </div>
+    <div class="up-label">JSON / NDJSON<small>JSON array &amp; NDJSON files</small></div>
+    <div class="up-val"><span id="up-json-files">0</span> files<small id="up-json-sql">0 SQL queries</small></div>
   </div>
   <div class="up-divider"></div>
   <div class="up-row" style="padding-top:4px">
@@ -578,6 +629,27 @@
         </div>
       </div>
 
+      <!-- JSON / NDJSON tile -->
+      <div class="tile" id="tile-json" onclick="switchTile('json')">
+        <div class="tile-icon" style="color:#bc8cff">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/>
+            <path d="M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>
+          </svg>
+        </div>
+        <div class="tile-name">JSON / NDJSON</div>
+        <div class="tile-desc">Parse JSON arrays and newline-delimited JSON — auto-flattens nested fields up to 2 levels deep</div>
+        <div class="tile-fmts">
+          <span class="tfmt json">.json</span>
+          <span class="tfmt json">.jsonl</span>
+          <span class="tfmt json">.ndjson</span>
+        </div>
+        <div class="tile-usage">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="uc-num json" id="uc-json">0</span>&nbsp;files loaded
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -655,6 +727,24 @@
       <span class="ehr-field-chip" style="background:rgba(86,211,164,.1);color:#56d3a4;border-color:rgba(86,211,164,.25)">FHIR ID</span>
     </div>
     <input type="file" id="wear-file-input" accept=".csv,.txt,.log,.parquet,.parq">
+    <p class="dz-hint" style="margin-top:-4px;">or copy a file and <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">⌘V</kbd> / <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">Ctrl+V</kbd> to paste</p>
+  </div>
+
+  <!-- JSON drop zone (hidden until JSON tile selected) -->
+  <div id="json-drop-zone" style="display:none">
+    <svg width="48" height="48" fill="none" stroke="#bc8cff" stroke-width="1.5" viewBox="0 0 24 24" opacity=".85">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    <p class="dz-title">Drop your JSON or NDJSON file</p>
+    <div class="format-badges">
+      <span class="format-badge json">.json</span>
+      <span class="format-badge json">.jsonl</span>
+      <span class="format-badge json">.ndjson</span>
+    </div>
+    <button class="btn primary" id="json-browse-btn" style="background:#3d1f6e;border-color:#bc8cff">Choose File</button>
+    <p class="dz-hint">Supports GB+ files via DuckDB · JSON arrays and NDJSON/JSONL · auto-flattens nested fields · no data leaves your browser</p>
+    <input type="file" id="json-file-input" accept=".json,.jsonl,.ndjson">
     <p class="dz-hint" style="margin-top:-4px;">or copy a file and <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">⌘V</kbd> / <kbd style="background:#21262d;border:1px solid #30363d;border-radius:3px;padding:1px 5px;font-size:10px;">Ctrl+V</kbd> to paste</p>
   </div>
 
@@ -810,6 +900,23 @@
     </div>
   </div>
 
+  <!-- JSON Schema Panel (shown only in JSON mode) -->
+  <div id="json-schema-panel">
+    <div class="schema-hdr" onclick="toggleSchemaPanel()">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 6 8 6 8 18"/><line x1="8" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="8" y1="18" x2="20" y2="18"/></svg>
+      <span class="schema-title">Schema</span>
+      <span id="json-schema-summary" style="color:#bc8cff;font-size:10px;"></span>
+      <div class="flatten-toggle">
+        <span>Flatten:</span>
+        <button class="fl-btn" id="fl-0" onclick="applyFlattenDepth(0,event)">Raw</button>
+        <button class="fl-btn active" id="fl-1" onclick="applyFlattenDepth(1,event)">1 level</button>
+        <button class="fl-btn" id="fl-2" onclick="applyFlattenDepth(2,event)">2 levels</button>
+      </div>
+      <svg id="schema-chevron" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-left:8px;transition:transform .2s;"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="schema-body" id="schema-body"></div>
+  </div>
+
   <div id="toolbar">
     <input id="search-box" type="text" placeholder="🔍  Search all columns…"/>
     <span id="search-info"></span>
@@ -937,7 +1044,7 @@ let sortCol=null, sortDir='asc', searchQuery='';
 let queryMode=false, queryResultCols=null, queryResultRows=null;
 let rowObjects=[];
 let currentFile=null, currentFileType=null;   // 'parquet' | 'csv' | 'ehr'
-let selectedMode = 'data';                     // 'data' | 'ehr'
+let selectedMode = 'data';                     // 'data' | 'ehr' | 'wearable' | 'json'
 
 // DuckDB (shared by both file types)
 let duckDB=null, duckConn=null, duckMod=null;
@@ -969,6 +1076,8 @@ const wearFileInput=document.getElementById('wear-file-input');
 const dropZone=document.getElementById('drop-zone');
 const ehrDropZone=document.getElementById('ehr-drop-zone');
 const wearDropZone=document.getElementById('wearable-drop-zone');
+const jsonDropZone  = document.getElementById('json-drop-zone');
+const jsonFileInput = document.getElementById('json-file-input');
 const tableWrap=document.getElementById('table-wrap');
 const headerGroup=document.getElementById('header-group');
 const tblHeader=document.getElementById('tbl-header');
@@ -992,12 +1101,13 @@ const csvOptionsPanel=document.getElementById('csv-options-panel');
 ═══════════════════════════════════════════════════════════ */
 window.switchTile = function(mode) {
   selectedMode = mode;
-  ['data','ehr','wearable'].forEach(m =>
+  ['data','ehr','wearable','json'].forEach(m =>
     document.getElementById(`tile-${m}`).classList.toggle('active', m === mode)
   );
   dropZone.style.display     = mode === 'data'     ? 'flex' : 'none';
   ehrDropZone.style.display  = mode === 'ehr'      ? 'flex' : 'none';
   wearDropZone.style.display = mode === 'wearable' ? 'flex' : 'none';
+  jsonDropZone.style.display = mode === 'json'     ? 'flex' : 'none';
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -1025,6 +1135,7 @@ function renderUsageBadges(u) {
   if(el('uc-data'))     el('uc-data').textContent     = u.data_files     || 0;
   if(el('uc-ehr'))      el('uc-ehr').textContent      = u.ehr_files      || 0;
   if(el('uc-wearable')) el('uc-wearable').textContent = u.wearable_files || 0;
+  if(el('uc-json'))     el('uc-json').textContent     = u.json_files     || 0;
   // Popup details
   if(el('up-data-files'))  el('up-data-files').textContent  = u.data_files     || 0;
   if(el('up-ehr-files'))   el('up-ehr-files').textContent   = u.ehr_files      || 0;
@@ -1032,6 +1143,8 @@ function renderUsageBadges(u) {
   if(el('up-data-sql'))    el('up-data-sql').textContent    = (u.data_sql     || 0) + ' SQL queries';
   if(el('up-ehr-sql'))     el('up-ehr-sql').textContent     = (u.ehr_sql      || 0) + ' SQL queries';
   if(el('up-wear-sql'))    el('up-wear-sql').textContent    = (u.wearable_sql || 0) + ' SQL queries';
+  if(el('up-json-files'))  el('up-json-files').textContent  = u.json_files  || 0;
+  if(el('up-json-sql'))    el('up-json-sql').textContent    = (u.json_sql   || 0) + ' SQL queries';
   if(el('up-exports'))     el('up-exports').textContent     = u.exports       || 0;
 }
 window.toggleUsagePopup = function() {
@@ -1089,6 +1202,13 @@ wearDropZone.addEventListener('dragleave',()=>wearDropZone.classList.remove('dra
 wearDropZone.addEventListener('drop',e=>{ e.preventDefault(); wearDropZone.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f)loadWearableFile(f).catch(err=>showError(err.message)); });
 wearFileInput.addEventListener('change',()=>wearFileInput.files[0]&&loadWearableFile(wearFileInput.files[0]).catch(err=>showError(err.message)));
 
+document.getElementById('json-browse-btn').addEventListener('click',()=>jsonFileInput.click());
+jsonDropZone.addEventListener('click',e=>{ if(e.target.tagName!=='BUTTON')jsonFileInput.click(); });
+jsonDropZone.addEventListener('dragover',e=>{ e.preventDefault(); jsonDropZone.classList.add('drag-over'); });
+jsonDropZone.addEventListener('dragleave',()=>jsonDropZone.classList.remove('drag-over'));
+jsonDropZone.addEventListener('drop',e=>{ e.preventDefault(); jsonDropZone.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f)loadJSONFile(f).catch(err=>showError(err.message)); });
+jsonFileInput.addEventListener('change',()=>jsonFileInput.files[0]&&loadJSONFile(jsonFileInput.files[0]).catch(err=>showError(err.message)));
+
 fileInput.addEventListener('change',()=>fileInput.files[0]&&loadFile(fileInput.files[0]));
 ehrFileInput.addEventListener('change',()=>ehrFileInput.files[0]&&loadEHRFile(ehrFileInput.files[0]));
 
@@ -1112,6 +1232,7 @@ document.addEventListener('paste', e => {
   const file = files[0];
   if      (selectedMode === 'ehr')      loadEHRFile(file).catch(err => showError(err.message));
   else if (selectedMode === 'wearable') loadWearableFile(file).catch(err => showError(err.message));
+  else if (selectedMode === 'json')     loadJSONFile(file).catch(err => showError(err.message));
   else                                  loadFile(file).catch(err => showError(err.message));
 });
 
@@ -1131,6 +1252,9 @@ function resetState() {
   document.getElementById('ehr-filter-section').classList.remove('visible');
   document.getElementById('wearable-stats-section').classList.remove('visible');
   document.getElementById('wearable-filter-section').classList.remove('visible');
+  document.getElementById('json-schema-panel').classList.remove('visible');
+  window._jsonSchema = null; window._jsonStructCols = []; window._jsonFlatDepth = 0;
+  if(jsonFileInput) jsonFileInput.value='';
   ['wf-date-from','wf-date-to','wf-userid','wf-start-date','wf-end-date','wf-fhir-id'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   ['wf-source','wf-payload'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='<option value="">All</option>';});
   if (memInterval) { clearInterval(memInterval); memInterval = null; }
@@ -1942,7 +2066,7 @@ async function runQuery(){
     document.getElementById('s-showing').textContent=resultRows.length.toLocaleString();
     buildHeader();setupVirtualScroll();
     // Track SQL usage per mode
-    const sqlKey = selectedMode === 'ehr' ? 'ehr_sql' : selectedMode === 'wearable' ? 'wearable_sql' : 'data_sql';
+    const sqlKey = selectedMode === 'ehr' ? 'ehr_sql' : selectedMode === 'wearable' ? 'wearable_sql' : selectedMode === 'json' ? 'json_sql' : 'data_sql';
     incUsage(sqlKey);
   }catch(err){showQErr(err.message);}
 }
@@ -1978,7 +2102,7 @@ function finalizeViewer(){
   document.getElementById('mem-stat').style.display = 'inline-flex';
   startMemoryMonitor();
   // Track usage per mode (wearable calls finalizeViewer too, so selectedMode is always set correctly)
-  const modeKey = selectedMode === 'ehr' ? 'ehr_files' : selectedMode === 'wearable' ? 'wearable_files' : 'data_files';
+  const modeKey = selectedMode === 'ehr' ? 'ehr_files' : selectedMode === 'wearable' ? 'wearable_files' : selectedMode === 'json' ? 'json_files' : 'data_files';
   incUsage(modeKey);
 }
 function updateShowing(){let n;if(queryMode&&queryResultRows)n=queryResultRows.length;else if(duckMode)n=duckTotal;else n=filteredRows.length;document.getElementById('s-showing').textContent=n.toLocaleString();}
@@ -2572,6 +2696,258 @@ document.getElementById('ehr-reset-btn').addEventListener('click', () => {
   });
   applyEHRFilters();
 });
+
+/* ═══════════════════════════════════════════════════════════
+   JSON / NDJSON VIEWER
+═══════════════════════════════════════════════════════════ */
+
+// Parse DuckDB STRUCT type string → array of {name, type}
+function parseStructFields(typeStr) {
+  const m = typeStr.match(/^STRUCT\((.+)\)$/is);
+  if (!m) return [];
+  const inner = m[1];
+  const fields = [];
+  let depth = 0, cur = '';
+  for (let i = 0; i < inner.length; i++) {
+    const ch = inner[i];
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    else if (ch === ',' && depth === 0) { fields.push(cur.trim()); cur = ''; continue; }
+    cur += ch;
+  }
+  if (cur.trim()) fields.push(cur.trim());
+  return fields.map(f => {
+    // field format: "name" TYPE  or  name TYPE
+    f = f.trim();
+    let name, type;
+    if (f.startsWith('"')) {
+      const endQ = f.indexOf('"', 1);
+      name = f.substring(1, endQ);
+      type = f.substring(endQ + 2).trim();
+    } else {
+      const sp = f.indexOf(' ');
+      name = f.substring(0, sp);
+      type = f.substring(sp + 1).trim();
+    }
+    return { name, type };
+  });
+}
+
+function schemaTypeClass(type) {
+  const t = type.toUpperCase();
+  if (t.startsWith('STRUCT') || t.startsWith('MAP') || t.startsWith('UNION')) return 'sct-struct';
+  if (t.startsWith('LIST') || t.startsWith('INT[]') || t.endsWith('[]')) return 'sct-list';
+  if (t.includes('VARCHAR') || t.includes('TEXT') || t.includes('CHAR')) return 'sct-str';
+  if (t.includes('INT') || t.includes('FLOAT') || t.includes('DOUBLE') || t.includes('DECIMAL') || t.includes('NUMERIC') || t.includes('BIGINT') || t.includes('REAL')) return 'sct-num';
+  return 'sct-other';
+}
+
+function renderSchemaPanel(schema, flatDepth) {
+  const body = document.getElementById('schema-body');
+  const summary = document.getElementById('json-schema-summary');
+  const structCount = schema.filter(c => c.type.toUpperCase().startsWith('STRUCT')).length;
+  summary.textContent = `${schema.length} columns` + (structCount ? ` · ${structCount} nested` : '');
+
+  body.innerHTML = schema.map(col => {
+    const tc = schemaTypeClass(col.type);
+    const isStruct = col.type.toUpperCase().startsWith('STRUCT');
+    let nested = '';
+    if (isStruct) {
+      const fields = parseStructFields(col.type);
+      nested = fields.length ? `<span class="schema-nested">↳ ${fields.map(f=>f.name).join(', ')}</span>` : '';
+    }
+    const shortType = col.type.length > 28 ? col.type.substring(0,25)+'…' : col.type;
+    return `<div class="schema-row">
+      <span class="schema-col-name">${col.name}</span>
+      <span class="schema-col-type ${tc}" title="${col.type}">${shortType}</span>
+      ${nested}
+    </div>`;
+  }).join('');
+}
+
+window.toggleSchemaPanel = function() {
+  const body = document.getElementById('schema-body');
+  const chev = document.getElementById('schema-chevron');
+  const open = body.classList.toggle('open');
+  chev.style.transform = open ? 'rotate(180deg)' : '';
+};
+
+// Build flattened SELECT and recreate json_data + view
+async function applyFlattenAndCreateView(depth) {
+  const schema = window._jsonSchema || [];
+  const parts = [];
+
+  for (const col of schema) {
+    const qname = `"${col.name.replace(/"/g,'""')}"`;
+    const t = col.type.toUpperCase();
+    const isStruct = t.startsWith('STRUCT');
+    const isComplex = t.startsWith('MAP') || t.startsWith('LIST') || t.endsWith('[]') || t.startsWith('UNION');
+
+    if (depth === 0 || (!isStruct && !isComplex)) {
+      parts.push(`${qname}`);
+    } else if (isStruct && depth >= 1) {
+      const fields = parseStructFields(col.type);
+      if (fields.length === 0) { parts.push(`CAST(${qname} AS VARCHAR) AS "${col.name.replace(/"/g,'""')}"`); continue; }
+      for (const f of fields) {
+        const fqname = `${qname}."${f.name.replace(/"/g,'""')}"`;
+        const flatName = `${col.name}_${f.name}`.replace(/[^a-zA-Z0-9_]/g, '_');
+        const subT = f.type.toUpperCase();
+        if (depth >= 2 && subT.startsWith('STRUCT')) {
+          const subFields = parseStructFields(f.type);
+          if (subFields.length === 0) { parts.push(`CAST(${fqname} AS VARCHAR) AS "${flatName}"`); continue; }
+          for (const sf of subFields) {
+            const sfFlat = `${flatName}_${sf.name}`.replace(/[^a-zA-Z0-9_]/g, '_');
+            parts.push(`CAST(${fqname}."${sf.name.replace(/"/g,'""')}" AS VARCHAR) AS "${sfFlat}"`);
+          }
+        } else if (subT.startsWith('STRUCT') || subT.startsWith('MAP') || subT.startsWith('LIST') || subT.endsWith('[]')) {
+          parts.push(`CAST(${fqname} AS VARCHAR) AS "${flatName}"`);
+        } else {
+          parts.push(`${fqname} AS "${flatName}"`);
+        }
+      }
+    } else {
+      // Complex non-struct (MAP, LIST etc.) — cast to string
+      parts.push(`CAST(${qname} AS VARCHAR) AS "${col.name.replace(/"/g,'""')}"`);
+    }
+  }
+
+  const selectSql = parts.join(',\n    ');
+  await duckConn.query('DROP TABLE IF EXISTS json_data');
+  await duckConn.query(`CREATE TABLE json_data AS SELECT\n    ${selectSql}\n  FROM json_raw`);
+  await duckConn.query('CREATE OR REPLACE VIEW data AS SELECT * FROM json_data');
+}
+
+window.applyFlattenDepth = async function(depth, evt) {
+  if (evt) evt.stopPropagation();
+  if (!window._jsonSchema) return;
+  window._jsonFlatDepth = depth;
+  ['fl-0','fl-1','fl-2'].forEach((id,i) => {
+    const b = document.getElementById(id);
+    if(b) b.classList.toggle('active', i === depth);
+  });
+  setProgress(0,'Re-flattening…','');
+  showLoading();
+  try {
+    await applyFlattenAndCreateView(depth);
+    const cr = await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM json_data');
+    const totalRows = Number(cr.toArray()[0].n);
+    // Refresh columns
+    const descRes = await duckConn.query('DESCRIBE json_data');
+    columns = descRes.toArray().map(r => r.column_name);
+    duckTotal = totalRows;
+    duckFilter = ''; duckOrderBy = ''; duckCache.clear(); duckFetching.clear();
+    initColState();
+    renderSchemaPanel(window._jsonSchema, depth);
+    document.getElementById('s-rows').textContent = totalRows.toLocaleString();
+    document.getElementById('s-cols').textContent = columns.length;
+    finalizeViewer();
+    document.getElementById('json-schema-panel').classList.add('visible');
+    filterRow.style.display = 'none';
+  } catch(e) { showError('Flatten failed: ' + e.message); }
+};
+
+async function finalizeJSON(file, totalRows, schema) {
+  // Get actual columns from the flattened json_data
+  const descRes = await duckConn.query('DESCRIBE json_data');
+  columns = descRes.toArray().map(r => r.column_name);
+  duckMode = true; duckTotal = totalRows;
+  duckFilter = ''; duckOrderBy = ''; duckCache.clear(); duckFetching.clear();
+  initColState();
+
+  document.getElementById('filetype-badge').textContent = 'JSON';
+  document.getElementById('filetype-badge').className   = 'json';
+  document.getElementById('s-file').textContent = file.name;
+  document.getElementById('s-size').textContent = fmtBytes(file.size);
+  document.getElementById('s-rows').textContent = totalRows.toLocaleString();
+  document.getElementById('s-cols').textContent = columns.length;
+  document.getElementById('duck-mode-badge').style.display = 'inline-flex';
+
+  querySql.placeholder = 'SELECT * FROM json_data LIMIT 100\n\n-- Table: json_data (or alias: data)\n-- Original nested fields accessible via: json_raw\n-- Press Ctrl+Enter to run';
+
+  finalizeViewer();
+  filterRow.style.display = 'none';
+
+  // Show schema panel
+  document.getElementById('json-schema-panel').classList.add('visible');
+  renderSchemaPanel(schema, window._jsonFlatDepth);
+}
+
+async function loadJSONFile(file) {
+  resetState();
+  currentFile = file;
+  currentFileType = 'json';
+  showLoading();
+  setProgress(5, `Initializing DuckDB for ${file.name}…`, '');
+
+  try {
+    // Init DuckDB if needed
+    if (!duckConn) {
+      await ensureDuckDB();
+    }
+
+    setProgress(15, 'Registering file with DuckDB…', '');
+    try { await duckDB.dropFile('json_upload'); } catch(e) {}
+    await duckDB.registerFileHandle('json_upload', file, 2, true);
+
+    setProgress(30, 'Parsing JSON…', 'Auto-detecting format (JSON array or NDJSON)');
+
+    await duckConn.query('DROP TABLE IF EXISTS json_raw');
+    await duckConn.query('DROP TABLE IF EXISTS json_data');
+
+    let parseError = null;
+    // Try read_json_auto — handles both JSON arrays and NDJSON
+    try {
+      await duckConn.query(`
+        CREATE TABLE json_raw AS
+        SELECT * FROM read_json_auto('json_upload',
+          maximum_object_size = 33554432,
+          ignore_errors = true
+        )
+      `);
+    } catch(e1) {
+      parseError = e1.message;
+      // Try explicit NDJSON
+      try {
+        await duckConn.query(`
+          CREATE TABLE json_raw AS
+          SELECT * FROM read_ndjson_auto('json_upload', ignore_errors = true)
+        `);
+        parseError = null;
+      } catch(e2) {
+        throw new Error(`Could not parse JSON file.\n\nTried JSON array and NDJSON formats.\n\nError: ${e2.message}`);
+      }
+    }
+
+    setProgress(60, 'Inspecting schema…', '');
+    const descRes = await duckConn.query('DESCRIBE json_raw');
+    const schema = descRes.toArray().map(r => ({ name: r.column_name, type: r.column_type }));
+
+    window._jsonSchema = schema;
+    window._jsonStructCols = schema.filter(c => c.type.toUpperCase().startsWith('STRUCT'));
+    // Default: flatten 1 level if there are STRUCT columns, else raw
+    window._jsonFlatDepth = window._jsonStructCols.length > 0 ? 1 : 0;
+
+    // Update flatten buttons to reflect default
+    ['fl-0','fl-1','fl-2'].forEach((id,i) => {
+      const b = document.getElementById(id);
+      if(b) b.classList.toggle('active', i === window._jsonFlatDepth);
+    });
+
+    setProgress(70, 'Flattening nested fields…', `${window._jsonStructCols.length} STRUCT columns found`);
+    await applyFlattenAndCreateView(window._jsonFlatDepth);
+
+    setProgress(90, 'Counting rows…', '');
+    const cr = await duckConn.query('SELECT COUNT(*)::BIGINT AS n FROM json_data');
+    const totalRows = Number(cr.toArray()[0].n);
+
+    setProgress(97, 'Finalizing…', '');
+    await finalizeJSON(file, totalRows, schema);
+
+  } catch(err) {
+    console.error(err);
+    showError(`Could not parse JSON file.\n\n${err.message}`);
+  }
+}
 </script>
 </body>
 </html>
