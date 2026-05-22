@@ -2128,17 +2128,34 @@ async function openValueFilter(e,col){
   popup.style.left=Math.max(4,left)+'px';
   popup.style.top=Math.max(4,top)+'px';
 
-  // Load values + counts from DuckDB
+  // Load values + counts — use DuckDB if available, else compute from in-memory rows
   try{
-    const qc=`"${col.replace(/"/g,'""')}"`;
-    const where=duckFilter?`WHERE ${duckFilter}`:'';
-    const res=await duckConn.query(
-      `SELECT ${qc} AS v, COUNT(*) AS cnt FROM data ${where} GROUP BY ${qc} ORDER BY cnt DESC LIMIT 300`
-    );
-    vfpData=res.toArray().map(r=>({
-      value:r.v===null?null:String(r.v),
-      count:Number(r.cnt)
-    }));
+    if(duckMode && duckConn){
+      // DuckDB path (large files)
+      const qc=`"${col.replace(/"/g,'""')}"`;
+      const where=duckFilter?`WHERE ${duckFilter}`:'';
+      const res=await duckConn.query(
+        `SELECT ${qc} AS v, COUNT(*) AS cnt FROM data ${where} GROUP BY ${qc} ORDER BY cnt DESC LIMIT 300`
+      );
+      vfpData=res.toArray().map(r=>({
+        value:r.v===null?null:String(r.v),
+        count:Number(r.cnt)
+      }));
+    } else {
+      // In-memory path (hyparquet / small files)
+      const colIdx = columns.indexOf(col);
+      const rows = (queryMode && queryResultRows) ? queryResultRows : filteredRows;
+      const counts = new Map();
+      for(const row of rows){
+        const v = colIdx >= 0 ? row[colIdx] : null;
+        const key = v === null || v === undefined ? null : String(v);
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+      vfpData = [...counts.entries()]
+        .map(([value, count]) => ({ value, count }))
+        .sort((a,b) => b.count - a.count)
+        .slice(0, 300);
+    }
     renderVFP('');
   }catch(err){
     document.getElementById('vfp-list').innerHTML=
